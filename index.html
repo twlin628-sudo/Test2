@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>電梯帝國</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #fef6ff;
+  --bg2:    #ffffff;
+  --bg3:    #f7eeff;
+  --bg4:    #ede0ff;
+  --border: rgba(180,120,240,0.15);
+  --border2:rgba(180,120,240,0.3);
+  --text:   #3d2060;
+  --text2:  #8060a8;
+  --text3:  #b8a0d0;
+  --accent: #c97bff;
+  --pink:   #ff7eb3;
+  --green:  #5cce8a;
+  --red:    #ff6b6b;
+  --yellow: #ffd166;
+  --blue:   #74b9ff;
+  --elev-a: #c97bff;
+  --elev-b: #74b9ff;
+  --fun: 'Nunito', 'Noto Sans TC', sans-serif;
+  --mono: 'Share Tech Mono', monospace;
+  --phone-w: 390px;
+  --phone-h: 844px;
+  --floor-h: 72px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html {
+  background: #e8d5ff;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh;
+}
+body {
+  width: var(--phone-w); height: var(--phone-h);
+  background: var(--bg); color: var(--text);
+  font-family: var(--fun);
+  display: flex; flex-direction: column;
+  overflow: hidden; position: relative;
+  border-radius: 28px;
+  box-shadow: 0 0 0 3px #c97bff, 0 0 0 6px #f0d9ff, 0 20px 60px rgba(160,80,220,0.35);
+}
+body::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    radial-gradient(ellipse 60px 40px at 10% 8%, rgba(201,123,255,0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 80px 50px at 85% 5%, rgba(255,126,179,0.07) 0%, transparent 70%);
+}
+
+/* ── TOPBAR ── */
+#topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px 8px;
+  background: linear-gradient(135deg,#f0d5ff,#ffd9f0);
+  border-bottom: 3px solid #e8b8ff;
+  flex-shrink: 0; position: relative; z-index: 1;
+}
+#game-title { font-size: 16px; font-weight: 900; color: var(--accent); }
+.hstats { display: flex; gap: 6px; }
+.hstat {
+  display: flex; flex-direction: column; align-items: center;
+  background: white; border: 2px solid #e8b8ff;
+  border-radius: 10px; padding: 3px 8px; min-width: 52px;
+  box-shadow: 0 3px 0 #e0a8f8;
+}
+.hstat-lbl { font-size: 8px; color: var(--text3); font-weight: 800; }
+.hstat-val { font-size: 15px; font-weight: 900; }
+#s-score { color: var(--accent); }
+#s-floors { color: var(--blue); }
+#s-time { color: var(--text2); font-size: 12px; }
+
+/* ── TIME BAR ── */
+#time-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 14px;
+  flex-shrink: 0; z-index: 1; position: relative;
+  transition: background 2s;
+}
+#time-bar-clock { font-size: 14px; font-weight: 900; color: var(--text); }
+#time-progress-bg {
+  flex: 1; height: 6px; background: rgba(180,120,240,0.15);
+  border-radius: 4px; overflow: hidden;
+}
+#time-progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+#time-bar-period { font-size: 11px; font-weight: 800; white-space: nowrap; }
+
+/* ── DEST STRIPS (A and B) ── */
+#dest-bars {
+  display: flex; flex-direction: column; gap: 0;
+  flex-shrink: 0; z-index: 1;
+  border-bottom: 2px solid var(--border2);
+}
+.dest-bar {
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 12px; min-height: 30px;
+  flex-wrap: nowrap; overflow-x: auto;
+}
+.dest-bar::-webkit-scrollbar { display: none; }
+.dest-bar-label {
+  font-size: 10px; font-weight: 900; flex-shrink: 0;
+  padding: 2px 7px; border-radius: 10px; color: white;
+}
+.dest-bar-a { background: rgba(201,123,255,0.08); border-bottom: 1px solid var(--border); }
+.dest-bar-b { background: rgba(116,185,255,0.08); }
+.dest-bar-label-a { background: var(--elev-a); }
+.dest-bar-label-b { background: var(--elev-b); }
+.dest-chip {
+  display: inline-flex; align-items: center; gap: 2px;
+  padding: 2px 7px; border-radius: 14px;
+  font-size: 11px; font-weight: 900;
+  white-space: nowrap; flex-shrink: 0; border: 2px solid;
+}
+.dest-bar-empty { font-size: 10px; color: var(--text3); font-weight: 700; }
+
+/* ── GAME AREA ── */
+#game-area {
+  flex: 1; position: relative; overflow: hidden;
+  background: var(--bg); z-index: 1;
+  display: flex;
+}
+
+/* main floor viewport */
+#floor-viewport { flex: 1; position: relative; overflow: hidden; }
+#floors-strip {
+  position: absolute; top: 0; left: 0; width: 100%;
+  will-change: transform;
+}
+
+/* ── FLOOR ROW ── */
+.floor-row {
+  width: 100%; height: var(--floor-h);
+  display: flex; align-items: center;
+  border-bottom: 2px dashed rgba(201,123,255,0.18);
+  position: relative; user-select: none;
+}
+.floor-row.has-target-a { border-left: 4px solid var(--elev-a); }
+.floor-row.has-target-b { border-left: 4px solid var(--elev-b); }
+.floor-row.is-elev-a { background: linear-gradient(90deg,rgba(201,123,255,0.1),transparent 80%); }
+.floor-row.is-elev-b { background: linear-gradient(90deg,rgba(116,185,255,0.1),transparent 80%); }
+.floor-row.is-elev-both { background: linear-gradient(90deg,rgba(160,160,255,0.13),transparent 80%); }
+.floor-num {
+  font-size: 13px; font-weight: 800; color: var(--text3);
+  width: 28px; text-align: right; padding-right: 5px; flex-shrink: 0;
+}
+.floor-name-tag {
+  font-size: 8px; font-weight: 800;
+  padding: 1px 4px; border-radius: 5px;
+  white-space: nowrap; flex-shrink: 0; margin-right: 2px;
+}
+.floor-arrows {
+  width: 16px; flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+}
+.arr-up   { font-size: 9px; color: var(--green); line-height: 1; }
+.arr-down { font-size: 9px; color: var(--red);   line-height: 1; }
+.floor-pax {
+  flex: 1; display: flex; align-items: center; gap: 3px;
+  padding: 0 4px; overflow: hidden; min-width: 0;
+}
+.pax-fig { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+.pax-head { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid white; }
+.pax-body { width: 12px; height: 11px; border-radius: 4px 4px 0 0; border: 1.5px solid white; }
+.floor-shaft-gap { width: 86px; flex-shrink: 0; }
+
+/* ── DUAL ELEVATOR SHAFT ── */
+#elev-shaft {
+  position: absolute; right: 6px; top: 0; bottom: 0; width: 90px;
+  pointer-events: none;
+}
+/* two dotted rails */
+#elev-shaft::before, #elev-shaft::after {
+  content: ''; position: absolute;
+  top: 0; bottom: 0; width: 3px;
+  background: repeating-linear-gradient(
+    to bottom, rgba(180,120,240,0.3) 0px, rgba(180,120,240,0.3) 5px,
+    transparent 5px, transparent 12px
+  );
+  border-radius: 2px;
+}
+#elev-shaft::before { left: 18px; }
+#elev-shaft::after  { right: 18px; }
+
+.elev-car {
+  position: absolute;
+  width: 36px; height: 64px;
+  border-radius: 14px; border: 3px solid;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 1px;
+  pointer-events: all; cursor: pointer;
+  transition: box-shadow 0.2s, border-color 0.2s, background 0.2s;
+  box-shadow: 0 3px 0 rgba(0,0,0,0.15);
+}
+#elev-car-a {
+  left: 0;
+  border-color: var(--elev-a);
+  background: linear-gradient(160deg,#f8e8ff,#ffd9f5);
+  color: var(--elev-a);
+  box-shadow: 0 4px 0 #c060e8;
+}
+#elev-car-b {
+  right: 0;
+  border-color: var(--elev-b);
+  background: linear-gradient(160deg,#e8f4ff,#d0e8ff);
+  color: var(--elev-b);
+  box-shadow: 0 4px 0 #3a88cc;
+}
+.elev-car.door-open {
+  border-color: var(--green) !important;
+  background: linear-gradient(160deg,#e8fff2,#d0ffe8) !important;
+  color: var(--green) !important;
+  box-shadow: 0 4px 0 #3aac6a, 0 0 16px rgba(92,206,138,0.45) !important;
+  animation: doorpulse 0.4s;
+}
+@keyframes doorpulse {
+  0%  { transform: translateY(0) scale(0.93); }
+  60% { transform: translateY(0) scale(1.04); }
+  100%{ transform: translateY(0) scale(1); }
+}
+.elev-car.selected { outline: 3px solid white; outline-offset: 2px; }
+.elev-lbl { font-size: 11px; font-weight: 900; }
+.elev-cnt { font-size: 9px; font-weight: 800; opacity: 0.8; }
+.elev-dir { font-size: 13px; line-height: 1; }
+
+/* ── MINI FLOOR BAR (right side) ── */
+#mini-bar {
+  width: 26px; flex-shrink: 0;
+  background: rgba(201,123,255,0.06);
+  border-left: 2px solid var(--border2);
+  display: flex; flex-direction: column;
+  position: relative; overflow: hidden;
+  cursor: pointer;
+}
+.mini-floor {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  border-bottom: 1px solid rgba(201,123,255,0.1);
+  font-size: 7px; font-weight: 900; color: var(--text3);
+  position: relative; cursor: pointer;
+  transition: background 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.mini-floor:active { background: rgba(201,123,255,0.15); }
+.mini-floor.has-pax { background: rgba(201,123,255,0.12); color: var(--accent); }
+.mini-floor.has-pax-many { background: rgba(201,123,255,0.22); }
+.mini-dot {
+  position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
+  width: 5px; height: 5px; border-radius: 50%;
+}
+.mini-dot-a { background: var(--elev-a); right: 9px; }
+.mini-dot-b { background: var(--elev-b); right: 2px; }
+.mini-target-a {
+  position: absolute; left: 0; right: 0;
+  height: 2px; background: var(--elev-a); opacity: 0.6;
+}
+.mini-target-b {
+  position: absolute; left: 0; right: 0;
+  height: 2px; background: var(--elev-b); opacity: 0.6;
+}
+
+/* ── OVERLAYS ── */
+.game-overlay {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: white; border-top: 3px solid #e0b8ff;
+  z-index: 30; display: none; flex-direction: column;
+  max-height: 58%; border-radius: 20px 20px 0 0; overflow: hidden;
+  box-shadow: 0 -4px 24px rgba(180,80,240,0.15);
+}
+.game-overlay.open { display: flex; }
+.overlay-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 16px 9px;
+  background: linear-gradient(135deg,#f8e8ff,#ffe8f8);
+  border-bottom: 2px solid #f0d0ff; flex-shrink: 0;
+}
+.overlay-title { font-size: 14px; font-weight: 900; color: var(--accent); }
+.overlay-close {
+  font-size: 15px; font-weight: 900; color: var(--text3);
+  background: white; border: 2px solid #e0b8ff;
+  border-radius: 50%; width: 28px; height: 28px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.overlay-close:active { background: #f0d0ff; }
+#log-list {
+  overflow-y: auto; padding: 10px 14px 14px;
+  display: flex; flex-direction: column; gap: 5px;
+}
+.log-pill {
+  font-size: 11px; font-weight: 800;
+  padding: 5px 10px; border-radius: 16px; width: fit-content;
+}
+.log-good { background: #e8fff2; color: #2a9e5c; border: 1.5px solid #b0ecd0; }
+.log-gold { background: #fff8e0; color: #b87c00; border: 1.5px solid #ffe080; }
+.log-info { background: #f0e8ff; color: #8040c0; border: 1.5px solid #d8b8ff; }
+.log-vip  { background: #fff0fa; color: #c0207a; border: 1.5px solid #f8b8e0; }
+
+#report-overlay {
+  position: absolute; inset: 0;
+  background: rgba(60,10,100,0.55); z-index: 50;
+  display: none; align-items: flex-end; justify-content: center;
+}
+#report-overlay.open { display: flex; }
+#report-box {
+  width: 100%; max-height: 90%;
+  background: var(--bg2); border-radius: 24px 24px 0 0;
+  border-top: 3px solid #e0b8ff;
+  overflow-y: auto; box-shadow: 0 -8px 32px rgba(180,80,240,0.25);
+}
+
+#pause-tint {
+  position: absolute; inset: 0;
+  background: rgba(240,210,255,0.55); backdrop-filter: blur(2px);
+  z-index: 25; display: none; align-items: center; justify-content: center;
+}
+#pause-tint.on { display: flex; }
+#pause-label {
+  font-size: 18px; font-weight: 900; color: var(--accent); letter-spacing: 3px;
+  background: white; padding: 10px 24px; border-radius: 20px;
+  border: 3px solid #e0b8ff; box-shadow: 0 4px 0 #c8a0e8;
+}
+
+/* ── CONTROLS ── */
+#controls {
+  flex-shrink: 0;
+  background: linear-gradient(180deg,#f8eeff,#fce8f8);
+  border-top: 3px solid #e8c0ff;
+  padding: 10px 14px 0;
+  padding-bottom: max(60px, env(safe-area-inset-bottom, 28px));
+  display: flex; flex-direction: column; gap: 8px;
+  position: relative; z-index: 1;
+}
+#ctrl-hint-row {
+  display: flex; align-items: center; gap: 8px;
+}
+#btn-log {
+  height: 46px; width: 62px; flex-shrink: 0;
+  border-radius: 12px; border: 2.5px solid #d8b8ff;
+  color: var(--text2); background: white;
+  font-size: 11px; font-weight: 800;
+  cursor: pointer; line-height: 1.3;
+  box-shadow: 0 3px 0 #c8a8e8;
+  transition: transform 0.07s, box-shadow 0.07s;
+  -webkit-tap-highlight-color: transparent;
+}
+#btn-log.active { border-color: var(--yellow); color: #b87c00; background: #fffbe8; box-shadow: 0 3px 0 #d4a800; }
+#btn-log:active { transform: translateY(3px); box-shadow: none; }
+.ctrl-hint {
+  flex: 1; font-size: 10px; color: var(--text3);
+  font-weight: 700; text-align: center;
+}
+
+/* selected elev indicator */
+#selected-indicator {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 4px 0;
+}
+.sel-btn {
+  flex: 1; height: 40px; border-radius: 12px; border: 2.5px solid;
+  font-size: 13px; font-weight: 900; cursor: pointer;
+  background: white; transition: transform 0.07s, background 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.sel-btn:active { transform: scale(0.95); }
+#sel-a { border-color: var(--elev-a); color: var(--elev-a); box-shadow: 0 3px 0 #c060e8; }
+#sel-b { border-color: var(--elev-b); color: var(--elev-b); box-shadow: 0 3px 0 #3a88cc; }
+#sel-a.active { background: #f8e8ff; }
+#sel-b.active { background: #e8f4ff; }
+
+/* float score */
+.float-score {
+  position: fixed; pointer-events: none;
+  font-size: 18px; font-weight: 900; z-index: 999;
+  animation: floatUp 1s ease-out forwards;
+  font-family: var(--fun);
+}
+@keyframes floatUp {
+  0%  { opacity:1; transform:translateY(0) scale(1.1); }
+  100%{ opacity:0; transform:translateY(-50px) scale(0.8); }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <div id="game-title">🏢 電梯冒險</div>
+  <div class="hstats">
+    <div class="hstat"><div class="hstat-lbl">⭐分數</div><div class="hstat-val" id="s-score">0</div></div>
+    <div class="hstat"><div class="hstat-lbl">🏠樓層</div><div class="hstat-val" id="s-floors">0</div></div>
+    <div class="hstat"><div class="hstat-lbl">⏰時間</div><div class="hstat-val" id="s-time">00:00</div></div>
+  </div>
+</div>
+
+<!-- TIME BAR -->
+<div id="time-bar">
+  <div id="time-bar-clock">07:00</div>
+  <div id="time-progress-bg"><div id="time-progress-fill"></div></div>
+  <div id="time-bar-period">🌞 早晨</div>
+</div>
+
+<!-- DEST STRIPS -->
+<div id="dest-bars">
+  <div class="dest-bar dest-bar-a">
+    <div class="dest-bar-label dest-bar-label-a">A</div>
+    <div class="dest-bar-empty" id="dest-empty-a">空車</div>
+  </div>
+  <div class="dest-bar dest-bar-b">
+    <div class="dest-bar-label dest-bar-label-b">B</div>
+    <div class="dest-bar-empty" id="dest-empty-b">空車</div>
+  </div>
+</div>
+
+<!-- GAME AREA -->
+<div id="game-area">
+  <div id="floor-viewport">
+    <div id="floors-strip"></div>
+    <div id="elev-shaft">
+      <div class="elev-car" id="elev-car-a">
+        <div class="elev-dir" id="edir-a">─</div>
+        <div class="elev-lbl">A</div>
+        <div class="elev-cnt" id="ecnt-a">0/10</div>
+      </div>
+      <div class="elev-car" id="elev-car-b">
+        <div class="elev-dir" id="edir-b">─</div>
+        <div class="elev-lbl">B</div>
+        <div class="elev-cnt" id="ecnt-b">0/10</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mini floor bar -->
+  <div id="mini-bar"></div>
+
+  <!-- Log overlay -->
+  <div id="log-overlay" class="game-overlay">
+    <div class="overlay-header">
+      <div class="overlay-title">📋 紀錄</div>
+      <button id="log-overlay-close" class="overlay-close">✕</button>
+    </div>
+    <div id="log-list"></div>
+  </div>
+
+  <!-- Daily report -->
+  <div id="report-overlay">
+    <div id="report-box"><div id="report-body"></div></div>
+  </div>
+
+  <!-- Pause tint -->
+  <div id="pause-tint"><div id="pause-label">PAUSED</div></div>
+</div>
+
+<!-- CONTROLS -->
+<div id="controls">
+  <div id="selected-indicator">
+    <button class="sel-btn active" id="sel-a">🟣 A 梯</button>
+    <button class="sel-btn" id="sel-b">🔵 B 梯</button>
+  </div>
+  <div id="ctrl-hint-row">
+    <button id="btn-log">📋<br>紀錄</button>
+    <div class="ctrl-hint">點選左側樓層指派選中電梯<br>點側邊條快速指派任意樓層</div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════
+//  CONSTANTS
+// ═══════════════════════
+const NUM_FLOORS = 20;
+const CAPACITY   = 10;
+const FLOOR_H    = 72;
+const SPEED      = FLOOR_H * 2.6;
+const DOOR_TIME  = 1200; // ms auto-close after boarding
+const REAL_MS_PER_GAME_MIN = 1000;
+const DAY_START  = 7 * 60;
+const DAY_END    = 24 * 60;
+
+const FLOOR_DEFS = {
+   0:{ name:'大廳',    emoji:'🚪', color:'#ffe0f0', tc:'#c0407a' },
+   1:{ name:'便利商店',emoji:'🏪', color:'#fff3cd', tc:'#8b6914' },
+   2:{ name:'咖啡廳',  emoji:'☕', color:'#f5e6d0', tc:'#7b4a1a' },
+   3:{ name:'藥局',    emoji:'💊', color:'#e8f5e9', tc:'#2e7d32' },
+   4:{ name:'餐廳',    emoji:'🍜', color:'#ffe8d0', tc:'#c05800' },
+   5:{ name:'書店',    emoji:'📚', color:'#e8f0ff', tc:'#3355bb' },
+   6:{ name:'美容院',  emoji:'💇', color:'#fce4ec', tc:'#c2185b' },
+   7:{ name:'健身房',  emoji:'💪', color:'#d8f5e8', tc:'#277a4e' },
+   8:{ name:'托兒所',  emoji:'🧒', color:'#fff9c4', tc:'#f9a825' },
+   9:{ name:'辦公室A', emoji:'💼', color:'#ddeeff', tc:'#2255aa' },
+  10:{ name:'會議室',  emoji:'📊', color:'#ede7f6', tc:'#6a1b9a' },
+  11:{ name:'醫療室',  emoji:'🏥', color:'#e0f7fa', tc:'#00838f' },
+  12:{ name:'法律事務所',emoji:'⚖️',color:'#fbe9e7', tc:'#bf360c' },
+  13:{ name:'設計工作室',emoji:'🎨',color:'#f8f0ff', tc:'#7b1fa2' },
+  14:{ name:'辦公室B', emoji:'📋', color:'#e8e0ff', tc:'#5533bb' },
+  15:{ name:'研究室',  emoji:'🔬', color:'#e8f5e9', tc:'#1b5e20' },
+  16:{ name:'主管室',  emoji:'🏆', color:'#fff8e1', tc:'#e65100' },
+  17:{ name:'休息區',  emoji:'🛋️', color:'#fce4ec', tc:'#880e4f' },
+  18:{ name:'天空餐廳',emoji:'🌅', color:'#e3f2fd', tc:'#0d47a1' },
+  19:{ name:'展望台',  emoji:'🌆', color:'#fff0d0', tc:'#aa6600' },
+};
+
+const PAX_TYPES = {
+  normal:  { emoji:'🧍', label:'一般',   scoreBonus:0, headC:'#ff7eb3', bodyC:'#c97bff' },
+  vip:     { emoji:'⭐', label:'VIP',    scoreBonus:2, headC:'#ffd166', bodyC:'#f5a623' },
+  tourist: { emoji:'📸', label:'觀光客', scoreBonus:1, headC:'#74b9ff', bodyC:'#0984e3' },
+  elderly: { emoji:'👴', label:'長者',   scoreBonus:1, headC:'#a8e6cf', bodyC:'#55a87e' },
+  child:   { emoji:'👧', label:'小朋友', scoreBonus:1, headC:'#fdcb6e', bodyC:'#e17055' },
+  celeb:   { emoji:'🌟', label:'名人',   scoreBonus:5, headC:'#fd79a8', bodyC:'#e84393' },
+  delivery:{ emoji:'📦', label:'外送員', scoreBonus:1, headC:'#55efc4', bodyC:'#00b894' },
+  doctor:  { emoji:'👨‍⚕️',label:'醫生', scoreBonus:2, headC:'#81ecec', bodyC:'#00cec9' },
+};
+
+const FLOOR_PAX_TYPE = {
+   0:['normal','normal','normal','vip','delivery'],
+   1:['normal','normal','delivery'],
+   2:['normal','normal','elderly'],
+   3:['normal','elderly','doctor'],
+   4:['normal','normal','normal','tourist'],
+   5:['normal','child','elderly'],
+   6:['normal','vip'],
+   7:['normal','normal'],
+   8:['normal','child','child'],
+   9:['normal','normal','vip','doctor'],
+  10:['normal','normal','vip'],
+  11:['normal','doctor','elderly'],
+  12:['normal','vip'],
+  13:['normal','normal'],
+  14:['normal','normal','vip'],
+  15:['normal','doctor'],
+  16:['vip','vip','celeb'],
+  17:['normal','elderly'],
+  18:['normal','vip','tourist'],
+  19:['tourist','tourist','normal','celeb'],
+};
+function pickPaxType(f){ const p=FLOOR_PAX_TYPE[f]||['normal']; return p[Math.floor(Math.random()*p.length)]; }
+
+// spawn weights
+const w={
+  lobby:   h=>(h>=8&&h<=9)||(h>=17&&h<=19)?1.0:(h>=7&&h<=23)?0.4:0,
+  cafe:    h=>(h>=7&&h<=10)||(h>=14&&h<=16)?0.7:(h>=7&&h<=22)?0.2:0,
+  conv:    h=>(h>=7&&h<=23)?0.3:0.05,
+  pharmacy:h=>(h>=9&&h<=20)?0.25:0,
+  rest:    h=>(h>=12&&h<=13)?1.0:(h>=18&&h<=19)?0.8:(h>=19&&h<=21)?0.4:0.05,
+  book:    h=>(h>=10&&h<=20)?0.3:0,
+  salon:   h=>(h>=10&&h<=19)?0.35:0,
+  gym:     h=>(h>=6&&h<=9)||(h>=18&&h<=21)?0.9:0.1,
+  daycare: h=>(h>=8&&h<=9)||(h>=17&&h<=18)?0.8:(h>=9&&h<=17)?0.1:0,
+  offA:    h=>(h>=8&&h<=10)?1.0:(h>=17&&h<=19)?1.0:(h>=10&&h<=17)?0.2:0,
+  meeting: h=>(h>=9&&h<=17)?0.5:0,
+  medical: h=>(h>=9&&h<=17)?0.4:0,
+  law:     h=>(h>=9&&h<=18)?0.3:0,
+  design:  h=>(h>=10&&h<=19)?0.3:0,
+  offB:    h=>(h>=9&&h<=10)?0.7:(h>=18&&h<=19)?0.7:(h>=10&&h<=18)?0.15:0,
+  lab:     h=>(h>=8&&h<=20)?0.25:0,
+  exec:    h=>(h>=9&&h<=18)?0.2:0,
+  lounge:  h=>(h>=12&&h<=21)?0.35:0,
+  skyrest: h=>(h>=11&&h<=22)?0.45:0,
+  obs:     h=>(h>=10&&h<=21)?0.3:0,
+  night:   h=>(h>=22||h<7)?0.1:0,
+};
+
+const SPAWN_POOL=[
+  {src:0,dest:-1,wf:w.lobby},{src:1,dest:-1,wf:w.conv},{src:2,dest:-1,wf:w.cafe},
+  {src:3,dest:-1,wf:w.pharmacy},{src:-1,dest:4,wf:w.rest},{src:4,dest:-1,wf:h=>w.rest(h)*0.4},
+  {src:5,dest:-1,wf:w.book},{src:6,dest:-1,wf:w.salon},
+  {src:0,dest:7,wf:w.gym},{src:7,dest:0,wf:w.gym},
+  {src:8,dest:0,wf:w.daycare},{src:0,dest:8,wf:w.daycare},
+  {src:0,dest:9,wf:h=>w.offA(h)>0.5&&h<14?w.offA(h):0},
+  {src:9,dest:0,wf:h=>w.offA(h)>0.5&&h>=14?w.offA(h):0},
+  {src:9,dest:-1,wf:h=>w.offA(h)*0.3},
+  {src:-1,dest:10,wf:w.meeting},{src:10,dest:-1,wf:h=>w.meeting(h)*0.5},
+  {src:-1,dest:11,wf:w.medical},{src:11,dest:0,wf:w.medical},
+  {src:-1,dest:12,wf:w.law},{src:-1,dest:13,wf:w.design},
+  {src:0,dest:14,wf:h=>w.offB(h)>0.3&&h<14?w.offB(h):0},
+  {src:14,dest:0,wf:h=>w.offB(h)>0.3&&h>=14?w.offB(h):0},
+  {src:-1,dest:15,wf:w.lab},{src:15,dest:-1,wf:h=>w.lab(h)*0.3},
+  {src:-1,dest:16,wf:w.exec},{src:16,dest:-1,wf:h=>w.exec(h)*0.5},
+  {src:-1,dest:17,wf:w.lounge},{src:-1,dest:18,wf:w.skyrest},
+  {src:18,dest:0,wf:h=>w.skyrest(h)*0.6},
+  {src:0,dest:19,wf:w.obs},{src:19,dest:0,wf:w.obs},
+  {src:-1,dest:-1,wf:h=>(h>=7&&h<=23)?0.12:w.night(h)},
+];
+
+// ═══════════════════════
+//  STATE
+// ═══════════════════════
+let G={};
+
+function initState(){
+  G={
+    elevs:[
+      mkElev(0, 0, 'a'),
+      mkElev(1, NUM_FLOORS-1, 'b'),
+    ],
+    selectedElev: 0,  // 0=A, 1=B
+    passengers:[],
+    score:0, floorsCount:0, elapsed:0, lastTime:null,
+    spawnTimer:0, uid:0, logs:[],
+    gameMins: DAY_START, dayEnded:false,
+    daily:{ delivered:0, byType:{}, byFloor:{}, bonusScore:0,
+            hourlyCount:new Array(24).fill(0), floorsCount:0 },
+  };
+}
+
+function mkElev(idx, startFloor, id){
+  return {
+    idx, id,
+    floor: startFloor,
+    pixelY: startFloor * FLOOR_H,
+    target: -1,
+    dir: 0,
+    state: 'idle',   // idle | moving | door
+    doorTimer: 0,
+    pax: [],
+    lastCountedFloor: startFloor,
+  };
+}
+
+// ═══════════════════════
+//  BUILD DOM
+// ═══════════════════════
+function buildFloors(){
+  const strip = document.getElementById('floors-strip');
+  strip.innerHTML='';
+  strip.style.height = (NUM_FLOORS*FLOOR_H)+'px';
+  for(let f=NUM_FLOORS-1;f>=0;f--){
+    const def=FLOOR_DEFS[f];
+    const tag=def?`<div class="floor-name-tag" style="background:${def.color};color:${def.tc}">${def.emoji}${def.name}</div>`:'';
+    const row=document.createElement('div');
+    row.className='floor-row'; row.id=`fr-${f}`;
+    row.innerHTML=`
+      <div class="floor-num">${f+1}</div>
+      <div class="floor-arrows" id="fa-${f}"></div>
+      <div class="floor-pax" id="fp-${f}">${tag}</div>
+      <div class="floor-shaft-gap"></div>`;
+    row.addEventListener('click',()=>assignSelected(f));
+    strip.appendChild(row);
+  }
+}
+
+function buildMiniBar(){
+  const bar=document.getElementById('mini-bar');
+  bar.innerHTML='';
+  // render top→bottom = floor 19 down to 0
+  for(let f=NUM_FLOORS-1;f>=0;f--){
+    const cell=document.createElement('div');
+    cell.className='mini-floor'; cell.id=`mf-${f}`;
+    cell.textContent=f+1;
+    cell.addEventListener('click',()=>assignSelected(f));
+    bar.appendChild(cell);
+  }
+}
+
+// ═══════════════════════
+//  SCROLL
+// ═══════════════════════
+function applyScroll(){
+  // scroll centred on selected elevator
+  const e=G.elevs[G.selectedElev];
+  const gameH=document.getElementById('floor-viewport').clientHeight;
+  const stripPos=(NUM_FLOORS-1)*FLOOR_H - e.pixelY + FLOOR_H/2;
+  const offset=gameH/2 - stripPos;
+  document.getElementById('floors-strip').style.transform=`translateY(${offset}px)`;
+}
+
+// ═══════════════════════
+//  ASSIGN
+// ═══════════════════════
+function assignSelected(floor){
+  const e=G.elevs[G.selectedElev];
+  assignElev(e, floor);
+}
+
+function assignElev(e, floor){
+  if(e.state==='door') return;
+  if(floor===e.floor){ openDoors(e); return; }
+  e.target=floor;
+  e.dir=floor>e.floor?1:-1;
+  e.state='moving';
+}
+
+// ═══════════════════════
+//  ELEVATOR PHYSICS
+// ═══════════════════════
+function updateElev(e, dt){
+  if(e.state==='door'){
+    e.doorTimer-=dt;
+    if(e.doorTimer<=0) closeDoors(e);
+    return;
+  }
+  if(e.state!=='moving') return;
+  if(e.target<0){ e.state='idle'; e.dir=0; return; }
+
+  const px=SPEED*(dt/1000);
+  e.pixelY+=e.dir*px;
+  const maxPx=(NUM_FLOORS-1)*FLOOR_H;
+  e.pixelY=Math.max(0,Math.min(maxPx,e.pixelY));
+
+  const newFloor=Math.round(e.pixelY/FLOOR_H);
+  if(newFloor!==e.lastCountedFloor){
+    G.floorsCount+=Math.abs(newFloor-e.lastCountedFloor);
+    e.lastCountedFloor=newFloor;
+  }
+  e.floor=newFloor;
+
+  const tPx=e.target*FLOOR_H;
+  if((e.dir===1&&e.pixelY>=tPx)||(e.dir===-1&&e.pixelY<=tPx)){
+    e.pixelY=tPx;
+    e.floor=e.target;
+    e.target=-1;
+    e.dir=0;
+    e.state='idle';
+    openDoors(e);
+  }
+}
+
+function openDoors(e){
+  e.state='door';
+  e.doorTimer=DOOR_TIME;
+  document.getElementById(`elev-car-${e.id}`).classList.add('door-open');
+
+  // drop off
+  e.pax=e.pax.filter(p=>{
+    if(p.dest!==e.floor) return true;
+    const pt=PAX_TYPES[p.type]||PAX_TYPES.normal;
+    const pts=1+pt.scoreBonus;
+    G.score+=pts;
+    G.daily.delivered++;
+    G.daily.byType[p.type]=(G.daily.byType[p.type]||0)+1;
+    G.daily.byFloor[p.dest]=(G.daily.byFloor[p.dest]||0)+1;
+    G.daily.bonusScore+=pt.scoreBonus;
+    const h=Math.floor(G.gameMins/60);
+    G.daily.hourlyCount[h]++;
+    const lbl=pt.scoreBonus>0?`${pt.emoji}${pt.label}到達${e.floor+1}F +${pts}分`:`到達${e.floor+1}F +1分`;
+    addLog(lbl, pt.scoreBonus>=5?'gold':pt.scoreBonus>0?'vip':'good');
+    floatScore(`+${pts}`, pt.scoreBonus>=5?'#f5a623':pt.scoreBonus>0?'#c97bff':'#5cce8a', e);
+    return false;
+  });
+
+  // board
+  G.passengers.forEach(p=>{
+    if(!p.waiting||p.start!==e.floor) return;
+    if(e.pax.length>=CAPACITY) return;
+    p.waiting=false;
+    e.pax.push(p);
+    const pt=PAX_TYPES[p.type]||PAX_TYPES.normal;
+    addLog(`${pt.emoji}上梯${p.start+1}F→${p.dest+1}F`,'info');
+  });
+}
+
+function closeDoors(e){
+  document.getElementById(`elev-car-${e.id}`).classList.remove('door-open');
+  e.state='idle'; e.dir=0;
+}
+
+// ═══════════════════════
+//  SPAWN
+// ═══════════════════════
+function pickDest(src){
+  const c=[];
+  for(let f=0;f<NUM_FLOORS;f++){
+    if(f===src) continue;
+    c.push({f,w:FLOOR_DEFS[f]?3:1});
+  }
+  const tot=c.reduce((s,x)=>s+x.w,0);
+  let r=Math.random()*tot;
+  for(const x of c){r-=x.w;if(r<=0)return x.f;}
+  return c[c.length-1].f;
+}
+
+function spawnPax(now){
+  if(G.dayEnded) return;
+  const h=gameHour();
+  const wts=SPAWN_POOL.map(e=>Math.max(0,e.wf(h)));
+  const tot=wts.reduce((s,x)=>s+x,0);
+  if(tot<=0) return;
+  const interval=5000*Math.max(0.4,1-tot*0.5);
+  if(now-G.spawnTimer<interval) return;
+  G.spawnTimer=now;
+  let r=Math.random()*tot;
+  let entry=SPAWN_POOL[SPAWN_POOL.length-1];
+  for(let i=0;i<SPAWN_POOL.length;i++){r-=wts[i];if(r<=0){entry=SPAWN_POOL[i];break;}}
+  let src=entry.src>=0?entry.src:Math.floor(Math.random()*NUM_FLOORS);
+  let dest=entry.dest>=0?entry.dest:pickDest(src);
+  if(src===dest) dest=pickDest(src);
+  if(src===dest) return;
+  let type=pickPaxType(src);
+  if(type==='celeb'&&Math.random()>0.15) type='vip';
+  G.passengers.push({id:G.uid++,start:src,dest,dir:dest>src?1:-1,type,waiting:true});
+}
+
+// ═══════════════════════
+//  TIME
+// ═══════════════════════
+function gameHour(){ return G.gameMins/60; }
+
+function updateGameTime(dt){
+  if(G.dayEnded) return;
+  G.gameMins+=dt/REAL_MS_PER_GAME_MIN;
+  if(G.gameMins>=DAY_END){
+    G.gameMins=DAY_END; G.dayEnded=true;
+    G.daily.floorsCount=G.floorsCount;
+    showDailyReport();
+  }
+}
+
+function timePeriod(h){
+  if(h>=7&&h<9)  return{label:'🌞 早晨',bg:'#fff8e1',fill:'#ffd54f',fillc:'#f57f17'};
+  if(h>=9&&h<12) return{label:'☀️ 上午',bg:'#f3f8ff',fill:'#64b5f6',fillc:'#1565c0'};
+  if(h>=12&&h<14)return{label:'🍱 午餐',bg:'#fff8e1',fill:'#ffb300',fillc:'#e65100'};
+  if(h>=14&&h<17)return{label:'🌤 下午',bg:'#f3f8ff',fill:'#81c784',fillc:'#2e7d32'};
+  if(h>=17&&h<19)return{label:'🌆 傍晚',bg:'#fff3e0',fill:'#ff8a65',fillc:'#bf360c'};
+  if(h>=19&&h<22)return{label:'🌙 夜晚',bg:'#f3e5f5',fill:'#9575cd',fillc:'#4527a0'};
+  return{label:'🌛 深夜',bg:'#e8eaf6',fill:'#7986cb',fillc:'#1a237e'};
+}
+
+// ═══════════════════════
+//  RENDER
+// ═══════════════════════
+function renderAll(){
+  applyScroll();
+  renderElevCars();
+  renderFloors();
+  renderDestStrips();
+  renderMiniBar();
+  renderHUD();
+  renderTimebar();
+}
+
+function renderElevCars(){
+  G.elevs.forEach(e=>{
+    const totalH=NUM_FLOORS*FLOOR_H;
+    const fromTop=totalH-e.pixelY-FLOOR_H;
+    const car=document.getElementById(`elev-car-${e.id}`);
+    car.style.top=(fromTop+4)+'px';
+    const de=document.getElementById(`edir-${e.id}`);
+    de.textContent=e.dir===1?'▲':e.dir===-1?'▼':e.state==='door'?'⊡':'─';
+    document.getElementById(`ecnt-${e.id}`).textContent=`${e.pax.length}/${CAPACITY}`;
+  });
+}
+
+function renderFloors(){
+  // clear row classes
+  for(let f=0;f<NUM_FLOORS;f++){
+    const row=document.getElementById(`fr-${f}`);
+    if(!row) continue;
+    row.classList.remove('is-elev-a','is-elev-b','is-elev-both','has-target-a','has-target-b');
+  }
+  const eA=G.elevs[0], eB=G.elevs[1];
+  const same=eA.floor===eB.floor;
+  if(same){
+    document.getElementById(`fr-${eA.floor}`)?.classList.add('is-elev-both');
+  } else {
+    document.getElementById(`fr-${eA.floor}`)?.classList.add('is-elev-a');
+    document.getElementById(`fr-${eB.floor}`)?.classList.add('is-elev-b');
+  }
+  if(eA.target>=0) document.getElementById(`fr-${eA.target}`)?.classList.add('has-target-a');
+  if(eB.target>=0) document.getElementById(`fr-${eB.target}`)?.classList.add('has-target-b');
+
+  for(let f=0;f<NUM_FLOORS;f++){
+    const pArea=document.getElementById(`fp-${f}`);
+    const aArea=document.getElementById(`fa-${f}`);
+    if(!pArea) continue;
+    const here=G.passengers.filter(p=>p.waiting&&p.start===f);
+    const def=FLOOR_DEFS[f];
+    const tag=def?`<div class="floor-name-tag" style="background:${def.color};color:${def.tc}">${def.emoji}${def.name}</div>`:'';
+    const paxHtml=here.slice(0,5).map(p=>{
+      const pt=PAX_TYPES[p.type]||PAX_TYPES.normal;
+      return`<div class="pax-fig"><div class="pax-head" style="background:${pt.headC}"></div><div class="pax-body" style="background:${pt.bodyC}"></div></div>`;
+    }).join('');
+    const extra=here.length>5?`<span style="font-size:9px;font-weight:800;color:var(--text3)">+${here.length-5}</span>`:'';
+    pArea.innerHTML=tag+paxHtml+extra;
+    if(aArea){
+      const up=here.some(p=>p.dir===1), dn=here.some(p=>p.dir===-1);
+      aArea.innerHTML=(up?'<div class="arr-up">▲</div>':'')+(dn?'<div class="arr-down">▼</div>':'');
+    }
+  }
+}
+
+function renderDestStrips(){
+  G.elevs.forEach(e=>{
+    const barId=`dest-bar-${e.id}`;  // we'll just re-render the whole bar
+    const bar=document.querySelector(`.dest-bar-${e.id==='a'?'a':'b'}`);
+    const emptyEl=document.getElementById(`dest-empty-${e.id}`);
+    bar.querySelectorAll('.dest-chip').forEach(c=>c.remove());
+    if(e.pax.length===0){ emptyEl.style.display='block'; return; }
+    emptyEl.style.display='none';
+    const groups={};
+    e.pax.forEach(p=>{
+      if(!groups[p.dest]) groups[p.dest]={count:0,type:p.type};
+      groups[p.dest].count++;
+      const rank={celeb:4,vip:3,doctor:2,elderly:2,child:2,tourist:2,delivery:1,normal:0};
+      if((rank[p.type]||0)>(rank[groups[p.dest].type]||0)) groups[p.dest].type=p.type;
+    });
+    Object.entries(groups).sort(([a],[b])=>+a-+b).forEach(([f,info])=>{
+      const fIdx=+f, def=FLOOR_DEFS[fIdx];
+      const chip=document.createElement('div');
+      chip.className='dest-chip';
+      chip.style.background=def?def.color:'#f0e8ff';
+      chip.style.color=def?def.tc:'#6030a0';
+      chip.style.borderColor=def?def.tc:'#c097f0';
+      chip.innerHTML=`${def?def.emoji:''}<span>${fIdx+1}F</span>${info.count>1?`<span style="opacity:0.7">×${info.count}</span>`:''}`;
+      bar.appendChild(chip);
+    });
+  });
+}
+
+function renderMiniBar(){
+  const eA=G.elevs[0], eB=G.elevs[1];
+  for(let f=NUM_FLOORS-1;f>=0;f--){
+    const cell=document.getElementById(`mf-${f}`);
+    if(!cell) continue;
+    cell.classList.remove('has-pax','has-pax-many');
+    cell.querySelectorAll('.mini-dot,.mini-target-a,.mini-target-b').forEach(x=>x.remove());
+
+    const cnt=G.passengers.filter(p=>p.waiting&&p.start===f).length;
+    if(cnt>0) cell.classList.add('has-pax');
+    if(cnt>3) cell.classList.add('has-pax-many');
+
+    if(eA.floor===f){
+      const d=document.createElement('div');
+      d.className='mini-dot mini-dot-a'; cell.appendChild(d);
+    }
+    if(eB.floor===f){
+      const d=document.createElement('div');
+      d.className='mini-dot mini-dot-b'; cell.appendChild(d);
+    }
+    if(eA.target===f){
+      const t=document.createElement('div'); t.className='mini-target-a'; cell.appendChild(t);
+    }
+    if(eB.target===f){
+      const t=document.createElement('div'); t.className='mini-target-b'; cell.appendChild(t);
+    }
+  }
+}
+
+function renderHUD(){
+  document.getElementById('s-score').textContent=G.score;
+  document.getElementById('s-floors').textContent=G.floorsCount;
+  const s=Math.floor(G.elapsed/1000);
+  document.getElementById('s-time').textContent=
+    `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  // selected indicator
+  document.getElementById('sel-a').classList.toggle('active',G.selectedElev===0);
+  document.getElementById('sel-b').classList.toggle('active',G.selectedElev===1);
+  // selected elev car outline
+  document.querySelectorAll('.elev-car').forEach(c=>c.classList.remove('selected'));
+  document.getElementById(`elev-car-${G.elevs[G.selectedElev].id}`).classList.add('selected');
+}
+
+function renderTimebar(){
+  const h=gameHour();
+  const hh=Math.floor(G.gameMins/60)%24, mm=Math.floor(G.gameMins%60);
+  const p=timePeriod(h);
+  const pct=((G.gameMins-DAY_START)/(DAY_END-DAY_START))*100;
+  document.getElementById('time-bar-clock').textContent=
+    `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+  document.getElementById('time-bar-period').textContent=p.label;
+  document.getElementById('time-bar').style.background=p.bg;
+  const fill=document.getElementById('time-progress-fill');
+  fill.style.width=Math.min(100,Math.max(0,pct))+'%';
+  fill.style.background=`linear-gradient(90deg,${p.fillc},${p.fill})`;
+}
+
+// ═══════════════════════
+//  DAILY REPORT
+// ═══════════════════════
+function showDailyReport(){
+  setPaused(true);
+  const d=G.daily;
+  let peakH=7,peakC=0;
+  d.hourlyCount.forEach((c,h)=>{if(c>peakC){peakC=c;peakH=h;}});
+  let topFloor=-1,topCount=0;
+  Object.entries(d.byFloor).forEach(([f,c])=>{if(c>topCount){topCount=c;topFloor=+f;}});
+  const topLabel=topFloor>=0?`${topFloor+1}F ${FLOOR_DEFS[topFloor]?.emoji||''} ${FLOOR_DEFS[topFloor]?.name||''}`:'—';
+  const specials=Object.entries(d.byType).filter(([t])=>t!=='normal')
+    .map(([t,c])=>`${PAX_TYPES[t].emoji}${PAX_TYPES[t].label}×${c}`).join('　')||'無';
+  const ratio=d.floorsCount>0?(d.delivered/d.floorsCount*10).toFixed(1):'0.0';
+  let rating='⭐'; if(+ratio>=1.5)rating='⭐⭐⭐'; else if(+ratio>=0.8)rating='⭐⭐';
+  document.getElementById('report-body').innerHTML=`
+    <div style="padding:16px 18px;display:flex;flex-direction:column;gap:14px">
+      <div style="text-align:center;font-size:22px;font-weight:900;color:var(--accent)">🌙 今日結束！</div>
+      <div style="text-align:center;font-size:13px;color:var(--text2);font-weight:700">無限塔 · 電梯日報</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        ${rCard('總送達','🧍',d.delivered,'人')}
+        ${rCard('總得分','⭐',G.score,'分')}
+        ${rCard('移動層數','🏢',d.floorsCount,'層')}
+        ${rCard('特殊獎勵','🎁',d.bonusScore,'分')}
+      </div>
+      <div style="background:var(--bg3);border-radius:14px;padding:12px 14px;border:2px solid var(--border2)">
+        <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:8px">📊 今日洞察</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);line-height:2">
+          🕐 最忙時段：<b style="color:var(--accent)">${String(peakH).padStart(2,'0')}:00</b>（${peakC}人次）<br>
+          🏆 最熱門樓層：<b style="color:var(--pink)">${topLabel}</b>（${topCount}人）<br>
+          ⚡ 效率指數：<b style="color:var(--green)">${ratio}</b> ${rating}
+        </div>
+      </div>
+      <div style="background:var(--bg3);border-radius:14px;padding:12px 14px;border:2px solid var(--border2)">
+        <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">🌟 特殊乘客</div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2)">${specials}</div>
+      </div>
+      <button id="report-next-day" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--accent);color:white;font-family:var(--fun);font-size:17px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #9040c0">
+        ☀️ 開始新的一天
+      </button>
+    </div>`;
+  document.getElementById('report-overlay').classList.add('open');
+  document.getElementById('report-next-day').addEventListener('click',()=>{
+    document.getElementById('report-overlay').classList.remove('open');
+    G.gameMins=DAY_START; G.dayEnded=false;
+    G.passengers=[];
+    G.daily={delivered:0,byType:{},byFloor:{},bonusScore:0,hourlyCount:new Array(24).fill(0),floorsCount:0};
+    G.floorsCount=0;
+    G.elevs.forEach(e=>{e.lastCountedFloor=e.floor;});
+    setPaused(false);
+    addLog('☀️ 新的一天開始了！','gold');
+  },{once:true});
+}
+function rCard(label,icon,val,unit){
+  return`<div style="background:white;border-radius:12px;padding:10px;border:2px solid var(--border2);box-shadow:0 3px 0 var(--border2);text-align:center">
+    <div style="font-size:18px">${icon}</div>
+    <div style="font-size:20px;font-weight:900;color:var(--accent)">${val}</div>
+    <div style="font-size:10px;font-weight:800;color:var(--text3)">${label}（${unit}）</div>
+  </div>`;
+}
+
+// ═══════════════════════
+//  LOG + FLOAT
+// ═══════════════════════
+let logItems=[];
+function addLog(msg,type=''){
+  logItems.unshift({msg,type});
+  if(logItems.length>50) logItems.pop();
+  const list=document.getElementById('log-list');
+  list.innerHTML=logItems.map(l=>`<div class="log-pill log-${l.type}">${l.msg}</div>`).join('');
+}
+function floatScore(text,color,e){
+  const car=document.getElementById(`elev-car-${e.id}`);
+  const r=car.getBoundingClientRect();
+  const el=document.createElement('div');
+  el.className='float-score';
+  el.style.cssText=`left:${r.left+r.width/2-14}px;top:${r.top-8}px;color:${color}`;
+  el.textContent=text;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),1050);
+}
+
+// ═══════════════════════
+//  PAUSE
+// ═══════════════════════
+function setPaused(on){
+  G.paused=on;
+  document.getElementById('pause-tint').classList.toggle('on',on);
+}
+
+// ═══════════════════════
+//  LOOP
+// ═══════════════════════
+function loop(now){
+  if(G.paused){G.lastTime=now; requestAnimationFrame(loop); return;}
+  if(!G.lastTime) G.lastTime=now;
+  const dt=Math.min(now-G.lastTime,80);
+  G.lastTime=now; G.elapsed+=dt;
+  updateGameTime(dt);
+  spawnPax(now);
+  G.elevs.forEach(e=>updateElev(e,dt));
+  renderAll();
+  requestAnimationFrame(loop);
+}
+
+// ═══════════════════════
+//  EVENTS
+// ═══════════════════════
+document.getElementById('sel-a').addEventListener('click',()=>{G.selectedElev=0;});
+document.getElementById('sel-b').addEventListener('click',()=>{G.selectedElev=1;});
+
+// tap elev car to select
+document.getElementById('elev-car-a').addEventListener('click',e=>{e.stopPropagation();G.selectedElev=0;});
+document.getElementById('elev-car-b').addEventListener('click',e=>{e.stopPropagation();G.selectedElev=1;});
+
+// log overlay
+const btnLog=document.getElementById('btn-log');
+const logOverlay=document.getElementById('log-overlay');
+function toggleLog(){
+  const open=logOverlay.classList.toggle('open');
+  btnLog.classList.toggle('active',open);
+  setPaused(open);
+}
+btnLog.addEventListener('click',toggleLog);
+document.getElementById('log-overlay-close').addEventListener('click',()=>{
+  logOverlay.classList.remove('open');
+  btnLog.classList.remove('active');
+  setPaused(false);
+});
+
+// keyboard
+document.addEventListener('keydown',ev=>{
+  if(ev.key==='1') G.selectedElev=0;
+  if(ev.key==='2') G.selectedElev=1;
+  if(ev.key==='Escape'){ logOverlay.classList.remove('open'); btnLog.classList.remove('active'); setPaused(false); }
+});
+
+// ═══════════════════════
+//  START
+// ═══════════════════════
+initState();
+buildFloors();
+buildMiniBar();
+addLog('歡迎來到電梯冒險！','gold');
+addLog('點選樓層指派選中電梯','info');
+addLog('點側邊條快速指派任意樓層','info');
+addLog('1/2 鍵盤切換電梯','info');
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
