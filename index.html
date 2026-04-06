@@ -363,10 +363,27 @@ body::before {
 }
 .elev-ctrl-label {
   text-align: center; font-size: 11px; font-weight: 900;
-  padding: 4px 0; border-radius: 8px;
+  padding: 6px 0; border-radius: 8px;
+  cursor: pointer; width: 100%;
+  transition: transform 0.07s, box-shadow 0.1s;
+  -webkit-tap-highlight-color: transparent;
 }
-.elev-ctrl-label-a { color: var(--elev-a); background: rgba(201,123,255,0.1); border: 2px solid var(--elev-a); }
-.elev-ctrl-label-b { color: var(--elev-b); background: rgba(116,185,255,0.1); border: 2px solid var(--elev-b); }
+.elev-ctrl-label-a {
+  color: var(--elev-a); background: rgba(201,123,255,0.08);
+  border: 2px solid var(--elev-a);
+  box-shadow: 0 3px 0 #c060e8;
+}
+.elev-ctrl-label-b {
+  color: var(--elev-b); background: rgba(116,185,255,0.08);
+  border: 2px solid var(--elev-b);
+  box-shadow: 0 3px 0 #3a88cc;
+}
+.elev-ctrl-label.main-elev {
+  color: white;
+}
+.elev-ctrl-label-a.main-elev { background: var(--elev-a); }
+.elev-ctrl-label-b.main-elev { background: var(--elev-b); }
+.elev-ctrl-label:active { transform: translateY(3px); box-shadow: none; }
 .col-btns { display: flex; gap: 6px; }
 .ctrl-btn {
   flex: 1; height: 58px;
@@ -477,7 +494,7 @@ body::before {
   <div id="dual-ctrl">
     <!-- A 梯 -->
     <div class="elev-ctrl-col">
-      <div class="elev-ctrl-label elev-ctrl-label-a">🟣 A 梯</div>
+      <button class="elev-ctrl-label elev-ctrl-label-a main-elev" id="elev-label-a" onclick="setMainElev(0)">🟣 A 梯（主）</button>
       <div class="col-btns">
         <button class="ctrl-btn" id="btn-a-up">▲</button>
         <button class="ctrl-btn" id="btn-a-down">▼</button>
@@ -485,7 +502,7 @@ body::before {
     </div>
     <!-- B 梯 -->
     <div class="elev-ctrl-col">
-      <div class="elev-ctrl-label elev-ctrl-label-b">🔵 B 梯</div>
+      <button class="elev-ctrl-label elev-ctrl-label-b" id="elev-label-b" onclick="setMainElev(1)">🔵 B 梯</button>
       <div class="col-btns">
         <button class="ctrl-btn" id="btn-b-up">▲</button>
         <button class="ctrl-btn" id="btn-b-down">▼</button>
@@ -645,6 +662,7 @@ function mkElev(idx, startFloor, id){
     target: -1,
     dir: 0,
     pressing: false,
+    pendingDir: 0,
     state: 'idle',
     doorTimer: 0,
     pax: [],
@@ -708,24 +726,28 @@ function pressUp(elevIdx, on){
   const e=G.elevs[elevIdx];
   const btnId= elevIdx===0 ? 'btn-a-up' : 'btn-b-up';
   document.getElementById(btnId).classList.toggle('active', on);
-  if(e.state==='door') return;
   if(on){
+    // 開門中：記下意圖，等門關後 closeDoors 會重啟移動
+    if(e.state==='door'){ e.pendingDir=1; return; }
     e.pressing=true; e.dir=1; e.target=-1; e.state='moving';
   } else {
+    e.pendingDir=0;
     e.pressing=false;
-    if(e.dir===1&&e.state==='moving') snapStop(e);
+    // 只在真的往上移動時才 snapStop
+    if(e.state==='moving' && e.dir===1) snapStop(e);
   }
 }
 function pressDown(elevIdx, on){
   const e=G.elevs[elevIdx];
   const btnId= elevIdx===0 ? 'btn-a-down' : 'btn-b-down';
   document.getElementById(btnId).classList.toggle('active', on);
-  if(e.state==='door') return;
   if(on){
+    if(e.state==='door'){ e.pendingDir=-1; return; }
     e.pressing=true; e.dir=-1; e.target=-1; e.state='moving';
   } else {
+    e.pendingDir=0;
     e.pressing=false;
-    if(e.dir===-1&&e.state==='moving') snapStop(e);
+    if(e.state==='moving' && e.dir===-1) snapStop(e);
   }
 }
 function snapStop(e){
@@ -733,6 +755,13 @@ function snapStop(e){
   e.pixelY=e.floor*FLOOR_H;
   e.dir=0; e.pressing=false; e.state='idle';
   openDoors(e);
+}
+
+// 主電梯切換（捲動視角跟隨）
+function setMainElev(idx){
+  G.selectedElev=idx;
+  document.getElementById('elev-label-a').classList.toggle('main-elev', idx===0);
+  document.getElementById('elev-label-b').classList.toggle('main-elev', idx===1);
 }
 function assignSelected(floor){
   const e=G.elevs[G.selectedElev];
@@ -828,6 +857,12 @@ function openDoors(e){
 function closeDoors(e){
   document.getElementById(`elev-car-${e.id}`).classList.remove('door-open');
   e.state='idle'; e.dir=0;
+  // 若門開著時玩家已按下移動鍵，門關後立即啟動
+  if(e.pendingDir!==0){
+    const d=e.pendingDir; e.pendingDir=0;
+    e.pressing=true; e.dir=d; e.target=-1; e.state='moving';
+  }
+}
 }
 
 // ═══════════════════════
@@ -1018,7 +1053,12 @@ function renderHUD(){
   const s=Math.floor(G.elapsed/1000);
   document.getElementById('s-time').textContent=
     `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
-  // highlight selected elev car for scroll focus
+  // label buttons reflect main elev
+  document.getElementById('elev-label-a').classList.toggle('main-elev', G.selectedElev===0);
+  document.getElementById('elev-label-b').classList.toggle('main-elev', G.selectedElev===1);
+  document.getElementById('elev-label-a').textContent = G.selectedElev===0 ? '🟣 A 梯（主）' : '🟣 A 梯';
+  document.getElementById('elev-label-b').textContent = G.selectedElev===1 ? '🔵 B 梯（主）' : '🔵 B 梯';
+  // elev car outline = main
   document.querySelectorAll('.elev-car').forEach(c=>c.classList.remove('selected'));
   document.getElementById(`elev-car-${G.elevs[G.selectedElev].id}`).classList.add('selected');
 }
