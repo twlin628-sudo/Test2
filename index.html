@@ -169,8 +169,11 @@ body::before {
 
 /* ── DUAL ELEVATOR SHAFT ── */
 #elev-shaft {
-  position: absolute; right: 6px; top: 0; bottom: 0; width: 90px;
+  position: absolute;
+  right: 0; top: 0;
+  width: 90px;
   pointer-events: none;
+  /* height set by JS to match floors-strip */
 }
 /* two dotted rails */
 #elev-shaft::before, #elev-shaft::after {
@@ -193,7 +196,6 @@ body::before {
   align-items: center; justify-content: center; gap: 1px;
   pointer-events: all; cursor: pointer;
   transition: box-shadow 0.2s, border-color 0.2s, background 0.2s;
-  box-shadow: 0 3px 0 rgba(0,0,0,0.15);
 }
 #elev-car-a {
   left: 0;
@@ -336,7 +338,7 @@ body::before {
   display: flex; align-items: center; gap: 8px;
 }
 #btn-log {
-  height: 46px; width: 62px; flex-shrink: 0;
+  height: 44px; width: 60px; flex-shrink: 0;
   border-radius: 12px; border: 2.5px solid #d8b8ff;
   color: var(--text2); background: white;
   font-size: 11px; font-weight: 800;
@@ -352,22 +354,40 @@ body::before {
   font-weight: 700; text-align: center;
 }
 
-/* selected elev indicator */
-#selected-indicator {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 4px 0;
+/* dual elevator control columns */
+#dual-ctrl {
+  display: flex; gap: 10px;
 }
-.sel-btn {
-  flex: 1; height: 40px; border-radius: 12px; border: 2.5px solid;
-  font-size: 13px; font-weight: 900; cursor: pointer;
-  background: white; transition: transform 0.07s, background 0.1s;
+.elev-ctrl-col {
+  flex: 1; display: flex; flex-direction: column; gap: 6px;
+}
+.elev-ctrl-label {
+  text-align: center; font-size: 11px; font-weight: 900;
+  padding: 4px 0; border-radius: 8px;
+}
+.elev-ctrl-label-a { color: var(--elev-a); background: rgba(201,123,255,0.1); border: 2px solid var(--elev-a); }
+.elev-ctrl-label-b { color: var(--elev-b); background: rgba(116,185,255,0.1); border: 2px solid var(--elev-b); }
+.col-btns { display: flex; gap: 6px; }
+.ctrl-btn {
+  flex: 1; height: 58px;
+  border-radius: 14px; border: 3px solid;
+  font-size: 24px; font-family: var(--fun);
+  cursor: pointer; background: white;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.07s, box-shadow 0.07s;
   -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+  box-shadow: 0 4px 0;
 }
-.sel-btn:active { transform: scale(0.95); }
-#sel-a { border-color: var(--elev-a); color: var(--elev-a); box-shadow: 0 3px 0 #c060e8; }
-#sel-b { border-color: var(--elev-b); color: var(--elev-b); box-shadow: 0 3px 0 #3a88cc; }
-#sel-a.active { background: #f8e8ff; }
-#sel-b.active { background: #e8f4ff; }
+.ctrl-btn:active { transform: translateY(4px); box-shadow: 0 0 0 !important; }
+#btn-a-up   { border-color: var(--elev-a); color: var(--elev-a); box-shadow-color: #c060e8; box-shadow: 0 4px 0 #c060e8; }
+#btn-a-up.active   { background: #f8e8ff; }
+#btn-a-down { border-color: var(--elev-a); color: var(--elev-a); box-shadow: 0 4px 0 #c060e8; }
+#btn-a-down.active { background: #f8e8ff; }
+#btn-b-up   { border-color: var(--elev-b); color: var(--elev-b); box-shadow: 0 4px 0 #3a88cc; }
+#btn-b-up.active   { background: #e8f4ff; }
+#btn-b-down { border-color: var(--elev-b); color: var(--elev-b); box-shadow: 0 4px 0 #3a88cc; }
+#btn-b-down.active { background: #e8f4ff; }
 
 /* float score */
 .float-score {
@@ -454,13 +474,27 @@ body::before {
 
 <!-- CONTROLS -->
 <div id="controls">
-  <div id="selected-indicator">
-    <button class="sel-btn active" id="sel-a">🟣 A 梯</button>
-    <button class="sel-btn" id="sel-b">🔵 B 梯</button>
+  <div id="dual-ctrl">
+    <!-- A 梯 -->
+    <div class="elev-ctrl-col">
+      <div class="elev-ctrl-label elev-ctrl-label-a">🟣 A 梯</div>
+      <div class="col-btns">
+        <button class="ctrl-btn" id="btn-a-up">▲</button>
+        <button class="ctrl-btn" id="btn-a-down">▼</button>
+      </div>
+    </div>
+    <!-- B 梯 -->
+    <div class="elev-ctrl-col">
+      <div class="elev-ctrl-label elev-ctrl-label-b">🔵 B 梯</div>
+      <div class="col-btns">
+        <button class="ctrl-btn" id="btn-b-up">▲</button>
+        <button class="ctrl-btn" id="btn-b-down">▼</button>
+      </div>
+    </div>
   </div>
   <div id="ctrl-hint-row">
     <button id="btn-log">📋<br>紀錄</button>
-    <div class="ctrl-hint">點選左側樓層指派選中電梯<br>點側邊條快速指派任意樓層</div>
+    <div class="ctrl-hint">左控🟣A梯 · 右控🔵B梯 · 放開自動停靠 · 點側邊條指派</div>
   </div>
 </div>
 
@@ -610,7 +644,8 @@ function mkElev(idx, startFloor, id){
     pixelY: startFloor * FLOOR_H,
     target: -1,
     dir: 0,
-    state: 'idle',   // idle | moving | door
+    pressing: false,
+    state: 'idle',
     doorTimer: 0,
     pax: [],
     lastCountedFloor: startFloor,
@@ -623,7 +658,9 @@ function mkElev(idx, startFloor, id){
 function buildFloors(){
   const strip = document.getElementById('floors-strip');
   strip.innerHTML='';
-  strip.style.height = (NUM_FLOORS*FLOOR_H)+'px';
+  const totalH=NUM_FLOORS*FLOOR_H;
+  strip.style.height = totalH+'px';
+  document.getElementById('elev-shaft').style.height = totalH+'px';
   for(let f=NUM_FLOORS-1;f>=0;f--){
     const def=FLOOR_DEFS[f];
     const tag=def?`<div class="floor-name-tag" style="background:${def.color};color:${def.tc}">${def.emoji}${def.name}</div>`:'';
@@ -656,17 +693,47 @@ function buildMiniBar(){
 //  SCROLL
 // ═══════════════════════
 function applyScroll(){
-  // scroll centred on selected elevator
   const e=G.elevs[G.selectedElev];
   const gameH=document.getElementById('floor-viewport').clientHeight;
   const stripPos=(NUM_FLOORS-1)*FLOOR_H - e.pixelY + FLOOR_H/2;
   const offset=gameH/2 - stripPos;
   document.getElementById('floors-strip').style.transform=`translateY(${offset}px)`;
+  document.getElementById('elev-shaft').style.transform=`translateY(${offset}px)`;
 }
 
 // ═══════════════════════
-//  ASSIGN
+//  PRESS CONTROLS (▲▼)
 // ═══════════════════════
+function pressUp(elevIdx, on){
+  const e=G.elevs[elevIdx];
+  const btnId= elevIdx===0 ? 'btn-a-up' : 'btn-b-up';
+  document.getElementById(btnId).classList.toggle('active', on);
+  if(e.state==='door') return;
+  if(on){
+    e.pressing=true; e.dir=1; e.target=-1; e.state='moving';
+  } else {
+    e.pressing=false;
+    if(e.dir===1&&e.state==='moving') snapStop(e);
+  }
+}
+function pressDown(elevIdx, on){
+  const e=G.elevs[elevIdx];
+  const btnId= elevIdx===0 ? 'btn-a-down' : 'btn-b-down';
+  document.getElementById(btnId).classList.toggle('active', on);
+  if(e.state==='door') return;
+  if(on){
+    e.pressing=true; e.dir=-1; e.target=-1; e.state='moving';
+  } else {
+    e.pressing=false;
+    if(e.dir===-1&&e.state==='moving') snapStop(e);
+  }
+}
+function snapStop(e){
+  e.floor=Math.round(e.pixelY/FLOOR_H);
+  e.pixelY=e.floor*FLOOR_H;
+  e.dir=0; e.pressing=false; e.state='idle';
+  openDoors(e);
+}
 function assignSelected(floor){
   const e=G.elevs[G.selectedElev];
   assignElev(e, floor);
@@ -690,7 +757,6 @@ function updateElev(e, dt){
     return;
   }
   if(e.state!=='moving') return;
-  if(e.target<0){ e.state='idle'; e.dir=0; return; }
 
   const px=SPEED*(dt/1000);
   e.pixelY+=e.dir*px;
@@ -704,6 +770,16 @@ function updateElev(e, dt){
   }
   e.floor=newFloor;
 
+  // pressing mode: stop at walls
+  if(e.pressing){
+    if((e.dir===1&&e.pixelY>=maxPx)||(e.dir===-1&&e.pixelY<=0)){
+      snapStop(e);
+    }
+    return;
+  }
+
+  // click-to-go mode
+  if(e.target<0){ e.state='idle'; e.dir=0; return; }
   const tPx=e.target*FLOOR_H;
   if((e.dir===1&&e.pixelY>=tPx)||(e.dir===-1&&e.pixelY<=tPx)){
     e.pixelY=tPx;
@@ -829,11 +905,12 @@ function renderAll(){
 }
 
 function renderElevCars(){
+  const totalH=NUM_FLOORS*FLOOR_H;
   G.elevs.forEach(e=>{
-    const totalH=NUM_FLOORS*FLOOR_H;
-    const fromTop=totalH-e.pixelY-FLOOR_H;
+    // fromTop: floor 0 = bottom of strip, floor N-1 = top
+    const fromTop=totalH - e.pixelY - FLOOR_H + (FLOOR_H - 64)/2;
     const car=document.getElementById(`elev-car-${e.id}`);
-    car.style.top=(fromTop+4)+'px';
+    car.style.top=fromTop+'px';
     const de=document.getElementById(`edir-${e.id}`);
     de.textContent=e.dir===1?'▲':e.dir===-1?'▼':e.state==='door'?'⊡':'─';
     document.getElementById(`ecnt-${e.id}`).textContent=`${e.pax.length}/${CAPACITY}`;
@@ -941,10 +1018,7 @@ function renderHUD(){
   const s=Math.floor(G.elapsed/1000);
   document.getElementById('s-time').textContent=
     `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
-  // selected indicator
-  document.getElementById('sel-a').classList.toggle('active',G.selectedElev===0);
-  document.getElementById('sel-b').classList.toggle('active',G.selectedElev===1);
-  // selected elev car outline
+  // highlight selected elev car for scroll focus
   document.querySelectorAll('.elev-car').forEach(c=>c.classList.remove('selected'));
   document.getElementById(`elev-car-${G.elevs[G.selectedElev].id}`).classList.add('selected');
 }
@@ -1071,12 +1145,26 @@ function loop(now){
 // ═══════════════════════
 //  EVENTS
 // ═══════════════════════
-document.getElementById('sel-a').addEventListener('click',()=>{G.selectedElev=0;});
-document.getElementById('sel-b').addEventListener('click',()=>{G.selectedElev=1;});
+function bindBtn(id, elevIdx, dirFn){
+  const btn=document.getElementById(id);
+  btn.addEventListener('mousedown',  ()=>dirFn(elevIdx,true));
+  btn.addEventListener('mouseup',    ()=>dirFn(elevIdx,false));
+  btn.addEventListener('mouseleave', ()=>dirFn(elevIdx,false));
+  btn.addEventListener('touchstart', e=>{e.preventDefault();dirFn(elevIdx,true); },{passive:false});
+  btn.addEventListener('touchend',   e=>{e.preventDefault();dirFn(elevIdx,false);},{passive:false});
+  btn.addEventListener('touchcancel',()=>dirFn(elevIdx,false));
+}
+bindBtn('btn-a-up',   0, pressUp);
+bindBtn('btn-a-down', 0, pressDown);
+bindBtn('btn-b-up',   1, pressUp);
+bindBtn('btn-b-down', 1, pressDown);
 
-// tap elev car to select
+// tap elev car to change scroll focus
 document.getElementById('elev-car-a').addEventListener('click',e=>{e.stopPropagation();G.selectedElev=0;});
 document.getElementById('elev-car-b').addEventListener('click',e=>{e.stopPropagation();G.selectedElev=1;});
+
+// mini-bar click assigns to whichever elev last moved (selectedElev)
+// floor row clicks same
 
 // log overlay
 const btnLog=document.getElementById('btn-log');
@@ -1093,11 +1181,23 @@ document.getElementById('log-overlay-close').addEventListener('click',()=>{
   setPaused(false);
 });
 
-// keyboard
+// keyboard: arrows control A, WASD control B
+const keysHeld=new Set();
 document.addEventListener('keydown',ev=>{
-  if(ev.key==='1') G.selectedElev=0;
-  if(ev.key==='2') G.selectedElev=1;
+  if(keysHeld.has(ev.key)) return;
+  keysHeld.add(ev.key);
+  if(ev.key==='ArrowUp')  {ev.preventDefault();pressUp(0,true);}
+  if(ev.key==='ArrowDown'){ev.preventDefault();pressDown(0,true);}
+  if(ev.key==='w'||ev.key==='W') pressUp(1,true);
+  if(ev.key==='s'||ev.key==='S') pressDown(1,true);
   if(ev.key==='Escape'){ logOverlay.classList.remove('open'); btnLog.classList.remove('active'); setPaused(false); }
+});
+document.addEventListener('keyup',ev=>{
+  keysHeld.delete(ev.key);
+  if(ev.key==='ArrowUp')   pressUp(0,false);
+  if(ev.key==='ArrowDown') pressDown(0,false);
+  if(ev.key==='w'||ev.key==='W') pressUp(1,false);
+  if(ev.key==='s'||ev.key==='S') pressDown(1,false);
 });
 
 // ═══════════════════════
@@ -1107,9 +1207,9 @@ initState();
 buildFloors();
 buildMiniBar();
 addLog('歡迎來到電梯冒險！','gold');
-addLog('點選樓層指派選中電梯','info');
-addLog('點側邊條快速指派任意樓層','info');
-addLog('1/2 鍵盤切換電梯','info');
+addLog('左側▲▼控制🟣A梯，右側▲▼控制🔵B梯','info');
+addLog('放開按鈕自動停靠開門','info');
+addLog('點側邊條可指派到任意樓層','info');
 requestAnimationFrame(loop);
 </script>
 </body>
