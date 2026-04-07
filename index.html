@@ -559,7 +559,7 @@ const PAX_TYPES = {
   child:   { emoji:'👧', label:'小朋友', scoreBonus:1, headC:'#fdcb6e', bodyC:'#e17055' },
   celeb:   { emoji:'🌟', label:'名人',   scoreBonus:5, headC:'#fd79a8', bodyC:'#e84393' },
   delivery:{ emoji:'📦', label:'外送員', scoreBonus:1, headC:'#55efc4', bodyC:'#00b894' },
-  doctor:  { emoji:'👨‍⚕️',label:'醫生', scoreBonus:2, headC:'#81ecec', bodyC:'#00cec9' },
+  doctor:  { emoji:'🩺', label:'醫生', scoreBonus:2, headC:'#81ecec', bodyC:'#00cec9' },
 };
 
 const FLOOR_PAX_TYPE = {
@@ -862,7 +862,6 @@ function closeDoors(e){
     const d=e.pendingDir; e.pendingDir=0;
     e.pressing=true; e.dir=d; e.target=-1; e.state='moving';
   }
-}
 }
 
 // ═══════════════════════
