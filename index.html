@@ -1227,49 +1227,136 @@ function renderTimebar(){
 function showDailyReport(){
   setPaused(true);
   const d=G.daily;
-  let peakH=7,peakC=0;
-  d.hourlyCount.forEach((c,h)=>{if(c>peakC){peakC=c;peakH=h;}});
-  let topFloor=-1,topCount=0;
-  Object.entries(d.byFloor).forEach(([f,c])=>{if(c>topCount){topCount=c;topFloor=+f;}});
-  const topLabel=topFloor>=0?`${topFloor+1}F ${FLOOR_DEFS[topFloor]?.emoji||''} ${FLOOR_DEFS[topFloor]?.name||''}`:'—';
-  const specials=Object.entries(d.byType).filter(([t])=>t!=='normal')
-    .map(([t,c])=>`${PAX_TYPES[t].emoji}${PAX_TYPES[t].label}×${c}`).join('　')||'無';
-  const ratio=d.floorsCount>0?(d.delivered/d.floorsCount*10).toFixed(1):'0.0';
-  let rating='⭐'; if(+ratio>=1.5)rating='⭐⭐⭐'; else if(+ratio>=0.8)rating='⭐⭐';
+
+  // ── Peak hour ──
+  let peakH=7, peakC=0;
+  d.hourlyCount.forEach((c,h)=>{ if(c>peakC){ peakC=c; peakH=h; } });
+
+  // ── A vs B contribution ──
+  const aScore = G.elevs[0].pax.reduce((_,p)=>{ return _; }, 0); // in-flight ignored
+  // Use daily bonusScore split by type: A = passengers, B = cargo
+  // Simple: delivered * avg pts each
+  const totalDelivered = d.delivered + d.cargoDelivered;
+  const aPct = totalDelivered > 0 ? Math.round(d.delivered / totalDelivered * 100) : 50;
+  const bPct = 100 - aPct;
+
+  // ── Efficiency ──
+  const totalSent = d.delivered + d.cargoDelivered;
+  const ratio = d.floorsCount > 0 ? (totalSent / d.floorsCount * 10).toFixed(1) : '0.0';
+  let rating='⭐', ratingText='還有進步空間';
+  if(+ratio>=2.0){ rating='⭐⭐⭐'; ratingText='調度非常高效！'; }
+  else if(+ratio>=1.2){ rating='⭐⭐'; ratingText='路線規劃不錯！'; }
+
+  // ── Efficiency comment ──
+  let effComment = '';
+  if(d.floorsCount > 0 && totalSent === 0) effComment = '今天幾乎沒有送達任何人或貨物。';
+  else if(aPct < 20) effComment = '貨梯今天擔起大局，客梯較少使用。';
+  else if(bPct < 20) effComment = '客梯今天全力運轉，貨梯還有發揮空間。';
+  else effComment = '客梯與貨梯今天分工均衡。';
+
+  // ── Hourly chart (07–23) ──
+  const activeHours = [];
+  for(let h=7; h<=23; h++) activeHours.push(h);
+  const maxCount = Math.max(1, ...activeHours.map(h=>d.hourlyCount[h]||0));
+  const barW = Math.floor(280 / activeHours.length);
+  const chartH = 56;
+
+  const hourBars = activeHours.map(h=>{
+    const cnt = d.hourlyCount[h] || 0;
+    const barH = Math.max(2, Math.round((cnt / maxCount) * chartH));
+    const isPeak = h === peakH;
+    const color = isPeak ? 'var(--accent)' : 'rgba(201,123,255,0.4)';
+    const label = h % 3 === 0 ? `<div style="font-size:6px;color:var(--text3);text-align:center;margin-top:2px">${h}</div>` : '';
+    return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;flex:1">
+      <div style="width:100%;background:${color};border-radius:2px 2px 0 0;height:${barH}px;${isPeak?'box-shadow:0 0 6px rgba(201,123,255,0.5)':''}"></div>
+      ${label}
+    </div>`;
+  }).join('');
+
+  // ── Special pax ──
+  const specials = Object.entries(d.byType)
+    .filter(([t])=>t!=='normal')
+    .map(([t,c])=>`${PAX_TYPES[t]?.emoji||''}${PAX_TYPES[t]?.label||t}×${c}`)
+    .join('　') || '無';
+
   document.getElementById('report-body').innerHTML=`
-    <div style="padding:16px 18px;display:flex;flex-direction:column;gap:14px">
-      <div style="text-align:center;font-size:22px;font-weight:900;color:var(--accent)">🌙 今日結束！</div>
-      <div style="text-align:center;font-size:13px;color:var(--text2);font-weight:700">無限塔 · 電梯日報</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div style="padding:14px 16px 18px;display:flex;flex-direction:column;gap:12px;font-family:var(--fun)">
+
+      <div style="text-align:center">
+        <div style="font-size:20px;font-weight:900;color:var(--accent)">🌙 今日結束！</div>
+        <div style="font-size:11px;color:var(--text2);font-weight:700;margin-top:2px">無限塔 · 電梯日報</div>
+      </div>
+
+      <!-- 4 stat cards -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         ${rCard('送達乘客','🧍',d.delivered,'人')}
         ${rCard('送達貨物','📦',d.cargoDelivered,'件')}
         ${rCard('總得分','⭐',G.score,'分')}
         ${rCard('移動層數','🏢',d.floorsCount,'層')}
       </div>
+
+      <!-- 圖表一：每小時送達量 -->
       <div style="background:var(--bg3);border-radius:14px;padding:12px 14px;border:2px solid var(--border2)">
-        <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:8px">📊 今日洞察</div>
-        <div style="font-size:13px;font-weight:700;color:var(--text);line-height:2">
-          🕐 最忙時段：<b style="color:var(--accent)">${String(peakH).padStart(2,'0')}:00</b>（${peakC}人次）<br>
-          🏆 最熱門樓層：<b style="color:var(--pink)">${topLabel}</b>（${topCount}人）<br>
-          ⚡ 效率指數：<b style="color:var(--green)">${ratio}</b> ${rating}
+        <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:8px">📊 每小時服務量（07–23時）</div>
+        <div style="display:flex;align-items:flex-end;height:${chartH+16}px;gap:1px;padding:0 2px">
+          ${hourBars}
+        </div>
+        <div style="font-size:10px;color:var(--text3);font-weight:700;margin-top:4px;text-align:center">
+          尖峰時段 <b style="color:var(--accent)">${String(peakH).padStart(2,'0')}:00</b>（${peakC} 次送達）
         </div>
       </div>
+
+      <!-- 圖表二：A/B 梯貢獻比 -->
       <div style="background:var(--bg3);border-radius:14px;padding:12px 14px;border:2px solid var(--border2)">
-        <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:6px">🌟 特殊乘客</div>
+        <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:8px">🧍📦 客梯 vs 貨梯貢獻</div>
+        <div style="display:flex;border-radius:8px;overflow:hidden;height:22px">
+          <div style="flex:${aPct};background:var(--elev-a);display:flex;align-items:center;justify-content:center">
+            <span style="font-size:10px;font-weight:900;color:white">${aPct>10?aPct+'%':''}</span>
+          </div>
+          <div style="flex:${bPct};background:var(--elev-b);display:flex;align-items:center;justify-content:center">
+            <span style="font-size:10px;font-weight:900;color:white">${bPct>10?bPct+'%':''}</span>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:5px">
+          <span style="font-size:10px;font-weight:800;color:var(--elev-a)">🧍 客梯 ${d.delivered}人</span>
+          <span style="font-size:10px;font-weight:800;color:var(--elev-b)">📦 貨梯 ${d.cargoDelivered}件</span>
+        </div>
+        <div style="font-size:10px;color:var(--text3);font-weight:700;margin-top:4px">${effComment}</div>
+      </div>
+
+      <!-- 圖表三：效率指數 -->
+      <div style="background:var(--bg3);border-radius:14px;padding:12px 14px;border:2px solid var(--border2);display:flex;align-items:center;gap:14px">
+        <div style="text-align:center;flex-shrink:0">
+          <div style="font-size:30px;font-weight:900;color:var(--green)">${ratio}</div>
+          <div style="font-size:12px">${rating}</div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:4px">⚡ 效率指數</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text2);line-height:1.5">${ratingText}<br>
+          <span style="font-size:10px;color:var(--text3)">= 送達總數 ÷ 移動層數 × 10</span></div>
+        </div>
+      </div>
+
+      <!-- 特殊乘客 -->
+      <div style="background:var(--bg3);border-radius:14px;padding:10px 14px;border:2px solid var(--border2)">
+        <div style="font-size:11px;font-weight:900;color:var(--text3);margin-bottom:5px">🌟 今日特殊乘客</div>
         <div style="font-size:12px;font-weight:700;color:var(--text2)">${specials}</div>
       </div>
-      <button id="report-next-day" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--accent);color:white;font-family:var(--fun);font-size:17px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #9040c0">
+
+      <button id="report-next-day" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--accent);color:white;font-family:var(--fun);font-size:17px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #9040c0;margin-top:2px">
         ☀️ 開始新的一天
       </button>
     </div>`;
+
   document.getElementById('report-overlay').classList.add('open');
   document.getElementById('report-next-day').addEventListener('click',()=>{
     document.getElementById('report-overlay').classList.remove('open');
     G.gameMins=DAY_START; G.dayEnded=false;
     G.passengers=[]; G.cargo=[];
-    G.daily={delivered:0,cargoDelivered:0,byType:{},byFloor:{},bonusScore:0,hourlyCount:new Array(24).fill(0),floorsCount:0};
+    G.daily={delivered:0,cargoDelivered:0,byType:{},byFloor:{},bonusScore:0,
+             hourlyCount:new Array(24).fill(0),floorsCount:0};
     G.floorsCount=0;
-    G.elevs.forEach(e=>{e.lastCountedFloor=e.floor;});
+    G.elevs.forEach(e=>{ e.lastCountedFloor=e.floor; });
     setPaused(false);
     addLog('☀️ 新的一天開始了！','gold');
   },{once:true});
