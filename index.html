@@ -23,7 +23,8 @@
   --yellow: #ffd166;
   --blue:   #74b9ff;
   --elev-a: #c97bff;
-  --elev-b: #74b9ff;
+  --elev-b: #f5a623;  /* cargo orange */
+  --cargo:  #f5a623;
   --fun: 'Nunito', 'Noto Sans TC', sans-serif;
   --mono: 'Share Tech Mono', monospace;
   --phone-w: 390px;
@@ -207,9 +208,42 @@ body::before {
 #elev-car-b {
   right: 0;
   border-color: var(--elev-b);
-  background: linear-gradient(160deg,#e8f4ff,#d0e8ff);
+  background: linear-gradient(160deg,#fff8e8,#ffe8c0);
   color: var(--elev-b);
-  box-shadow: 0 4px 0 #3a88cc;
+  box-shadow: 0 4px 0 #c47d0e;
+}
+
+/* ── CARGO FIGURE ── */
+.cargo-fig {
+  display: flex; flex-direction: column; align-items: center; flex-shrink: 0;
+  position: relative;
+}
+.cargo-box {
+  width: 14px; height: 13px;
+  border-radius: 3px; border: 2px solid;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 8px; line-height: 1;
+}
+.cargo-tag {
+  font-size: 7px; font-weight: 900; margin-top: 1px;
+  color: var(--text3);
+}
+
+/* ── FLOOR PAX/CARGO split ── */
+.floor-pax {
+  flex: 1; display: flex; align-items: center;
+  padding: 0 2px; overflow: hidden; min-width: 0;
+  gap: 0;
+}
+.floor-pax-people {
+  flex: 1; display: flex; align-items: center; gap: 2px;
+  overflow: hidden; min-width: 0;
+  border-right: 1.5px dashed rgba(201,123,255,0.2);
+  padding-right: 3px; margin-right: 3px;
+}
+.floor-pax-cargo {
+  flex: 1; display: flex; align-items: center; gap: 2px;
+  overflow: hidden; min-width: 0;
 }
 .elev-car.door-open {
   border-color: var(--green) !important;
@@ -374,9 +408,9 @@ body::before {
   box-shadow: 0 3px 0 #c060e8;
 }
 .elev-ctrl-label-b {
-  color: var(--elev-b); background: rgba(116,185,255,0.08);
+  color: var(--elev-b); background: rgba(245,166,35,0.08);
   border: 2px solid var(--elev-b);
-  box-shadow: 0 3px 0 #3a88cc;
+  box-shadow: 0 3px 0 #c47d0e;
 }
 .elev-ctrl-label.main-elev {
   color: white;
@@ -401,10 +435,10 @@ body::before {
 #btn-a-up.active   { background: #f8e8ff; }
 #btn-a-down { border-color: var(--elev-a); color: var(--elev-a); box-shadow: 0 4px 0 #c060e8; }
 #btn-a-down.active { background: #f8e8ff; }
-#btn-b-up   { border-color: var(--elev-b); color: var(--elev-b); box-shadow: 0 4px 0 #3a88cc; }
-#btn-b-up.active   { background: #e8f4ff; }
-#btn-b-down { border-color: var(--elev-b); color: var(--elev-b); box-shadow: 0 4px 0 #3a88cc; }
-#btn-b-down.active { background: #e8f4ff; }
+#btn-b-up   { border-color: var(--elev-b); color: var(--elev-b); box-shadow: 0 4px 0 #c47d0e; }
+#btn-b-up.active   { background: #fff8e8; }
+#btn-b-down { border-color: var(--elev-b); color: var(--elev-b); box-shadow: 0 4px 0 #c47d0e; }
+#btn-b-down.active { background: #fff8e8; }
 
 /* float score */
 .float-score {
@@ -445,8 +479,8 @@ body::before {
     <div class="dest-bar-empty" id="dest-empty-a">空車</div>
   </div>
   <div class="dest-bar dest-bar-b">
-    <div class="dest-bar-label dest-bar-label-b">B</div>
-    <div class="dest-bar-empty" id="dest-empty-b">空車</div>
+    <div class="dest-bar-label dest-bar-label-b">📦</div>
+    <div class="dest-bar-empty" id="dest-empty-b">空載</div>
   </div>
 </div>
 
@@ -494,7 +528,7 @@ body::before {
   <div id="dual-ctrl">
     <!-- A 梯 -->
     <div class="elev-ctrl-col">
-      <button class="elev-ctrl-label elev-ctrl-label-a main-elev" id="elev-label-a" onclick="setMainElev(0)">🟣 A 梯（主）</button>
+      <button class="elev-ctrl-label elev-ctrl-label-a main-elev" id="elev-label-a" onclick="setMainElev(0)">🧍 客梯 A（主）</button>
       <div class="col-btns">
         <button class="ctrl-btn" id="btn-a-up">▲</button>
         <button class="ctrl-btn" id="btn-a-down">▼</button>
@@ -502,7 +536,7 @@ body::before {
     </div>
     <!-- B 梯 -->
     <div class="elev-ctrl-col">
-      <button class="elev-ctrl-label elev-ctrl-label-b" id="elev-label-b" onclick="setMainElev(1)">🔵 B 梯</button>
+      <button class="elev-ctrl-label elev-ctrl-label-b" id="elev-label-b" onclick="setMainElev(1)">📦 貨梯 B</button>
       <div class="col-btns">
         <button class="ctrl-btn" id="btn-b-up">▲</button>
         <button class="ctrl-btn" id="btn-b-down">▼</button>
@@ -511,7 +545,7 @@ body::before {
   </div>
   <div id="ctrl-hint-row">
     <button id="btn-log">📋<br>紀錄</button>
-    <div class="ctrl-hint">左控🟣A梯 · 右控🔵B梯 · 放開自動停靠 · 點側邊條指派</div>
+    <div class="ctrl-hint">左🧍客梯A · 右📦貨梯B · 放開停靠 · 點側邊條指派</div>
   </div>
 </div>
 
@@ -586,6 +620,48 @@ const FLOOR_PAX_TYPE = {
 };
 function pickPaxType(f){ const p=FLOOR_PAX_TYPE[f]||['normal']; return p[Math.floor(Math.random()*p.length)]; }
 
+// ── CARGO TYPES ──
+const CARGO_TYPES = {
+  food:    { emoji:'🍱', label:'餐點',   scoreBonus:2, color:'#ffe8d0', bc:'#c05800' },
+  medical: { emoji:'💉', label:'醫療',   scoreBonus:3, color:'#e0f7fa', bc:'#00838f' },
+  doc:     { emoji:'📁', label:'文件',   scoreBonus:1, color:'#e8e0ff', bc:'#5533bb' },
+  coffee:  { emoji:'☕', label:'咖啡',   scoreBonus:1, color:'#f5e6d0', bc:'#7b4a1a' },
+  parcel:  { emoji:'📦', label:'包裹',   scoreBonus:1, color:'#fff3cd', bc:'#8b6914' },
+  lab:     { emoji:'🔭', label:'設備',   scoreBonus:3, color:'#e8f5e9', bc:'#1b5e20' },
+  exhibit: { emoji:'🖼️', label:'展覽品', scoreBonus:2, color:'#fff0d0', bc:'#aa6600' },
+  gym:     { emoji:'🏋️', label:'器材',   scoreBonus:1, color:'#d8f5e8', bc:'#277a4e' },
+};
+
+// Cargo spawn: {src, dest, cargoType, wf(h)}
+const CARGO_SPAWN_POOL = [
+  // 餐點：從大廳或餐廳送往辦公室
+  { src:0,  dest:9,  type:'food',    wf: h=>(h>=11&&h<=13)?0.9:(h>=17&&h<=18)?0.6:0.05 },
+  { src:0,  dest:14, type:'food',    wf: h=>(h>=11&&h<=13)?0.7:(h>=17&&h<=18)?0.5:0.05 },
+  { src:4,  dest:9,  type:'food',    wf: h=>(h>=12&&h<=14)?0.8:0.1 },
+  { src:18, dest:-1, type:'food',    wf: h=>(h>=18&&h<=21)?0.5:0.1 },
+  // 醫療：大廳送往醫療室
+  { src:0,  dest:11, type:'medical', wf: h=>(h>=8&&h<=17)?0.5:0.1 },
+  { src:11, dest:0,  type:'medical', wf: h=>(h>=14&&h<=18)?0.3:0.05 },
+  // 文件：辦公室之間流通
+  { src:0,  dest:9,  type:'doc',     wf: h=>(h>=8&&h<=18)?0.4:0 },
+  { src:9,  dest:14, type:'doc',     wf: h=>(h>=9&&h<=17)?0.3:0 },
+  { src:14, dest:16, type:'doc',     wf: h=>(h>=10&&h<=17)?0.3:0 },
+  { src:0,  dest:12, type:'doc',     wf: h=>(h>=9&&h<=17)?0.25:0 },
+  // 咖啡：咖啡廳送往辦公室
+  { src:2,  dest:9,  type:'coffee',  wf: h=>(h>=8&&h<=10)||(h>=14&&h<=15)?0.7:0.1 },
+  { src:2,  dest:14, type:'coffee',  wf: h=>(h>=8&&h<=10)?0.5:0.05 },
+  { src:2,  dest:16, type:'coffee',  wf: h=>(h>=9&&h<=11)?0.4:0.05 },
+  // 包裹：大廳送往各層
+  { src:0,  dest:-1, type:'parcel',  wf: h=>(h>=9&&h<=18)?0.4:0.1 },
+  // 實驗設備：大廳送往研究室
+  { src:0,  dest:15, type:'lab',     wf: h=>(h>=8&&h<=12)?0.4:0.05 },
+  { src:15, dest:0,  type:'lab',     wf: h=>(h>=16&&h<=18)?0.2:0.02 },
+  // 展覽品：送往展望台
+  { src:0,  dest:19, type:'exhibit', wf: h=>(h>=9&&h<=11)?0.3:0.05 },
+  // 健身器材：大廳送往健身房
+  { src:0,  dest:7,  type:'gym',     wf: h=>(h>=7&&h<=9)?0.5:0.05 },
+];
+
 // spawn weights
 const w={
   lobby:   h=>(h>=8&&h<=9)||(h>=17&&h<=19)?1.0:(h>=7&&h<=23)?0.4:0,
@@ -644,12 +720,13 @@ function initState(){
       mkElev(0, 0, 'a'),
       mkElev(1, NUM_FLOORS-1, 'b'),
     ],
-    selectedElev: 0,  // 0=A, 1=B
+    selectedElev: 0,
     passengers:[],
+    cargo:[],         // waiting cargo on floors
     score:0, floorsCount:0, elapsed:0, lastTime:null,
-    spawnTimer:0, uid:0, logs:[],
+    spawnTimer:0, cargoSpawnTimer:0, uid:0, logs:[],
     gameMins: DAY_START, dayEnded:false,
-    daily:{ delivered:0, byType:{}, byFloor:{}, bonusScore:0,
+    daily:{ delivered:0, cargoDelivered:0, byType:{}, byFloor:{}, bonusScore:0,
             hourlyCount:new Array(24).fill(0), floorsCount:0 },
   };
 }
@@ -687,7 +764,10 @@ function buildFloors(){
     row.innerHTML=`
       <div class="floor-num">${f+1}</div>
       <div class="floor-arrows" id="fa-${f}"></div>
-      <div class="floor-pax" id="fp-${f}">${tag}</div>
+      <div class="floor-pax" id="fp-${f}">
+        <div class="floor-pax-people" id="fpp-${f}">${tag}</div>
+        <div class="floor-pax-cargo"  id="fpc-${f}"></div>
+      </div>
       <div class="floor-shaft-gap"></div>`;
     row.addEventListener('click',()=>assignSelected(f));
     strip.appendChild(row);
@@ -825,33 +905,58 @@ function openDoors(e){
   e.doorTimer=DOOR_TIME;
   document.getElementById(`elev-car-${e.id}`).classList.add('door-open');
 
-  // drop off
-  e.pax=e.pax.filter(p=>{
-    if(p.dest!==e.floor) return true;
-    const pt=PAX_TYPES[p.type]||PAX_TYPES.normal;
-    const pts=1+pt.scoreBonus;
-    G.score+=pts;
-    G.daily.delivered++;
-    G.daily.byType[p.type]=(G.daily.byType[p.type]||0)+1;
-    G.daily.byFloor[p.dest]=(G.daily.byFloor[p.dest]||0)+1;
-    G.daily.bonusScore+=pt.scoreBonus;
-    const h=Math.floor(G.gameMins/60);
-    G.daily.hourlyCount[h]++;
-    const lbl=pt.scoreBonus>0?`${pt.emoji}${pt.label}到達${e.floor+1}F +${pts}分`:`到達${e.floor+1}F +1分`;
-    addLog(lbl, pt.scoreBonus>=5?'gold':pt.scoreBonus>0?'vip':'good');
-    floatScore(`+${pts}`, pt.scoreBonus>=5?'#f5a623':pt.scoreBonus>0?'#c97bff':'#5cce8a', e);
-    return false;
-  });
-
-  // board
-  G.passengers.forEach(p=>{
-    if(!p.waiting||p.start!==e.floor) return;
-    if(e.pax.length>=CAPACITY) return;
-    p.waiting=false;
-    e.pax.push(p);
-    const pt=PAX_TYPES[p.type]||PAX_TYPES.normal;
-    addLog(`${pt.emoji}上梯${p.start+1}F→${p.dest+1}F`,'info');
-  });
+  if(e.id==='a'){
+    // ── 客梯 A：只處理乘客 ──
+    e.pax=e.pax.filter(p=>{
+      if(p.dest!==e.floor) return true;
+      const pt=PAX_TYPES[p.type]||PAX_TYPES.normal;
+      const pts=1+pt.scoreBonus;
+      G.score+=pts;
+      G.daily.delivered++;
+      G.daily.byType[p.type]=(G.daily.byType[p.type]||0)+1;
+      G.daily.byFloor[p.dest]=(G.daily.byFloor[p.dest]||0)+1;
+      G.daily.bonusScore+=pt.scoreBonus;
+      const h=Math.floor(G.gameMins/60);
+      G.daily.hourlyCount[h]++;
+      const lbl=pt.scoreBonus>0?`${pt.emoji}${pt.label}到達${e.floor+1}F +${pts}分`:`🧍到達${e.floor+1}F +1分`;
+      addLog(lbl, pt.scoreBonus>=5?'gold':pt.scoreBonus>0?'vip':'good');
+      floatScore(`+${pts}`, pt.scoreBonus>=5?'#f5a623':pt.scoreBonus>0?'#c97bff':'#5cce8a', e);
+      return false;
+    });
+    // board passengers
+    G.passengers.forEach(p=>{
+      if(!p.waiting||p.start!==e.floor) return;
+      if(e.pax.length>=CAPACITY) return;
+      p.waiting=false;
+      e.pax.push(p);
+      const pt=PAX_TYPES[p.type]||PAX_TYPES.normal;
+      addLog(`${pt.emoji}上客梯${p.start+1}F→${p.dest+1}F`,'info');
+    });
+  } else {
+    // ── 貨梯 B：只處理貨物 ──
+    e.pax=e.pax.filter(c=>{
+      if(c.dest!==e.floor) return true;
+      const ct=CARGO_TYPES[c.type]||CARGO_TYPES.parcel;
+      const pts=1+ct.scoreBonus;
+      G.score+=pts;
+      G.daily.cargoDelivered++;
+      G.daily.bonusScore+=ct.scoreBonus;
+      const h=Math.floor(G.gameMins/60);
+      G.daily.hourlyCount[h]++;
+      addLog(`${ct.emoji}${ct.label}送達${e.floor+1}F +${pts}分`, ct.scoreBonus>=3?'gold':'good');
+      floatScore(`+${pts}`, ct.scoreBonus>=3?'#f5a623':'#f5a623', e);
+      return false;
+    });
+    // load cargo
+    G.cargo.forEach(c=>{
+      if(!c.waiting||c.start!==e.floor) return;
+      if(e.pax.length>=CAPACITY) return;
+      c.waiting=false;
+      e.pax.push(c);
+      const ct=CARGO_TYPES[c.type]||CARGO_TYPES.parcel;
+      addLog(`${ct.emoji}${ct.label}裝載${c.start+1}F→${c.dest+1}F`,'info');
+    });
+  }
 }
 
 function closeDoors(e){
@@ -898,6 +1003,25 @@ function spawnPax(now){
   let type=pickPaxType(src);
   if(type==='celeb'&&Math.random()>0.15) type='vip';
   G.passengers.push({id:G.uid++,start:src,dest,dir:dest>src?1:-1,type,waiting:true});
+}
+
+function spawnCargo(now){
+  if(G.dayEnded) return;
+  const h=gameHour();
+  const wts=CARGO_SPAWN_POOL.map(e=>Math.max(0,e.wf(h)));
+  const tot=wts.reduce((s,x)=>s+x,0);
+  if(tot<=0) return;
+  const interval=7000*Math.max(0.4,1-tot*0.4);
+  if(now-G.cargoSpawnTimer<interval) return;
+  G.cargoSpawnTimer=now;
+  let r=Math.random()*tot;
+  let entry=CARGO_SPAWN_POOL[CARGO_SPAWN_POOL.length-1];
+  for(let i=0;i<CARGO_SPAWN_POOL.length;i++){r-=wts[i];if(r<=0){entry=CARGO_SPAWN_POOL[i];break;}}
+  let src=entry.src>=0?entry.src:Math.floor(Math.random()*NUM_FLOORS);
+  let dest=entry.dest>=0?entry.dest:pickDest(src);
+  if(src===dest) dest=pickDest(src);
+  if(src===dest) return;
+  G.cargo.push({id:G.uid++,start:src,dest,type:entry.type,waiting:true});
 }
 
 // ═══════════════════════
@@ -952,15 +1076,13 @@ function renderElevCars(){
 }
 
 function renderFloors(){
-  // clear row classes
   for(let f=0;f<NUM_FLOORS;f++){
     const row=document.getElementById(`fr-${f}`);
     if(!row) continue;
     row.classList.remove('is-elev-a','is-elev-b','is-elev-both','has-target-a','has-target-b');
   }
   const eA=G.elevs[0], eB=G.elevs[1];
-  const same=eA.floor===eB.floor;
-  if(same){
+  if(eA.floor===eB.floor){
     document.getElementById(`fr-${eA.floor}`)?.classList.add('is-elev-both');
   } else {
     document.getElementById(`fr-${eA.floor}`)?.classList.add('is-elev-a');
@@ -970,20 +1092,35 @@ function renderFloors(){
   if(eB.target>=0) document.getElementById(`fr-${eB.target}`)?.classList.add('has-target-b');
 
   for(let f=0;f<NUM_FLOORS;f++){
-    const pArea=document.getElementById(`fp-${f}`);
-    const aArea=document.getElementById(`fa-${f}`);
-    if(!pArea) continue;
-    const here=G.passengers.filter(p=>p.waiting&&p.start===f);
+    const ppArea=document.getElementById(`fpp-${f}`); // people
+    const pcArea=document.getElementById(`fpc-${f}`); // cargo
+    const aArea =document.getElementById(`fa-${f}`);
+    if(!ppArea) continue;
+
     const def=FLOOR_DEFS[f];
     const tag=def?`<div class="floor-name-tag" style="background:${def.color};color:${def.tc}">${def.emoji}${def.name}</div>`:'';
-    const paxHtml=here.slice(0,5).map(p=>{
+
+    // ── People side ──
+    const people=G.passengers.filter(p=>p.waiting&&p.start===f);
+    const paxHtml=people.slice(0,4).map(p=>{
       const pt=PAX_TYPES[p.type]||PAX_TYPES.normal;
       return`<div class="pax-fig"><div class="pax-head" style="background:${pt.headC}"></div><div class="pax-body" style="background:${pt.bodyC}"></div></div>`;
     }).join('');
-    const extra=here.length>5?`<span style="font-size:9px;font-weight:800;color:var(--text3)">+${here.length-5}</span>`:'';
-    pArea.innerHTML=tag+paxHtml+extra;
+    const pExtra=people.length>4?`<span style="font-size:8px;font-weight:800;color:var(--text3)">+${people.length-4}</span>`:'';
+    ppArea.innerHTML=tag+paxHtml+pExtra;
+
+    // ── Cargo side ──
+    const cargos=G.cargo.filter(c=>c.waiting&&c.start===f);
+    const cargoHtml=cargos.slice(0,3).map(c=>{
+      const ct=CARGO_TYPES[c.type]||CARGO_TYPES.parcel;
+      return`<div class="cargo-fig"><div class="cargo-box" style="border-color:${ct.bc};background:${ct.color}">${ct.emoji}</div></div>`;
+    }).join('');
+    const cExtra=cargos.length>3?`<span style="font-size:8px;font-weight:800;color:var(--text3)">+${cargos.length-3}</span>`:'';
+    pcArea.innerHTML=cargoHtml+cExtra;
+
+    // ── Direction arrows (passengers only) ──
     if(aArea){
-      const up=here.some(p=>p.dir===1), dn=here.some(p=>p.dir===-1);
+      const up=people.some(p=>p.dir===1), dn=people.some(p=>p.dir===-1);
       aArea.innerHTML=(up?'<div class="arr-up">▲</div>':'')+(dn?'<div class="arr-down">▼</div>':'');
     }
   }
@@ -991,8 +1128,8 @@ function renderFloors(){
 
 function renderDestStrips(){
   G.elevs.forEach(e=>{
-    const barId=`dest-bar-${e.id}`;  // we'll just re-render the whole bar
-    const bar=document.querySelector(`.dest-bar-${e.id==='a'?'a':'b'}`);
+    const isCargo = e.id==='b';
+    const bar=document.querySelector(`.dest-bar-${e.id}`);
     const emptyEl=document.getElementById(`dest-empty-${e.id}`);
     bar.querySelectorAll('.dest-chip').forEach(c=>c.remove());
     if(e.pax.length===0){ emptyEl.style.display='block'; return; }
@@ -1001,17 +1138,24 @@ function renderDestStrips(){
     e.pax.forEach(p=>{
       if(!groups[p.dest]) groups[p.dest]={count:0,type:p.type};
       groups[p.dest].count++;
-      const rank={celeb:4,vip:3,doctor:2,elderly:2,child:2,tourist:2,delivery:1,normal:0};
-      if((rank[p.type]||0)>(rank[groups[p.dest].type]||0)) groups[p.dest].type=p.type;
     });
     Object.entries(groups).sort(([a],[b])=>+a-+b).forEach(([f,info])=>{
-      const fIdx=+f, def=FLOOR_DEFS[fIdx];
+      const fIdx=+f;
       const chip=document.createElement('div');
       chip.className='dest-chip';
-      chip.style.background=def?def.color:'#f0e8ff';
-      chip.style.color=def?def.tc:'#6030a0';
-      chip.style.borderColor=def?def.tc:'#c097f0';
-      chip.innerHTML=`${def?def.emoji:''}<span>${fIdx+1}F</span>${info.count>1?`<span style="opacity:0.7">×${info.count}</span>`:''}`;
+      if(isCargo){
+        const ct=CARGO_TYPES[info.type]||CARGO_TYPES.parcel;
+        chip.style.background=ct.color;
+        chip.style.color=ct.bc;
+        chip.style.borderColor=ct.bc;
+        chip.innerHTML=`${ct.emoji}<span>${fIdx+1}F</span>${info.count>1?`<span style="opacity:0.7">×${info.count}</span>`:''}`;
+      } else {
+        const def=FLOOR_DEFS[fIdx];
+        chip.style.background=def?def.color:'#f0e8ff';
+        chip.style.color=def?def.tc:'#6030a0';
+        chip.style.borderColor=def?def.tc:'#c097f0';
+        chip.innerHTML=`${def?def.emoji:''}<span>${fIdx+1}F</span>${info.count>1?`<span style="opacity:0.7">×${info.count}</span>`:''}`;
+      }
       bar.appendChild(chip);
     });
   });
@@ -1025,7 +1169,8 @@ function renderMiniBar(){
     cell.classList.remove('has-pax','has-pax-many');
     cell.querySelectorAll('.mini-dot,.mini-target-a,.mini-target-b').forEach(x=>x.remove());
 
-    const cnt=G.passengers.filter(p=>p.waiting&&p.start===f).length;
+    const cnt=G.passengers.filter(p=>p.waiting&&p.start===f).length
+            + G.cargo.filter(c=>c.waiting&&c.start===f).length;
     if(cnt>0) cell.classList.add('has-pax');
     if(cnt>3) cell.classList.add('has-pax-many');
 
@@ -1055,8 +1200,8 @@ function renderHUD(){
   // label buttons reflect main elev
   document.getElementById('elev-label-a').classList.toggle('main-elev', G.selectedElev===0);
   document.getElementById('elev-label-b').classList.toggle('main-elev', G.selectedElev===1);
-  document.getElementById('elev-label-a').textContent = G.selectedElev===0 ? '🟣 A 梯（主）' : '🟣 A 梯';
-  document.getElementById('elev-label-b').textContent = G.selectedElev===1 ? '🔵 B 梯（主）' : '🔵 B 梯';
+  document.getElementById('elev-label-a').textContent = G.selectedElev===0 ? '🧍 客梯 A（主）' : '🧍 客梯 A';
+  document.getElementById('elev-label-b').textContent = G.selectedElev===1 ? '📦 貨梯 B（主）' : '📦 貨梯 B';
   // elev car outline = main
   document.querySelectorAll('.elev-car').forEach(c=>c.classList.remove('selected'));
   document.getElementById(`elev-car-${G.elevs[G.selectedElev].id}`).classList.add('selected');
@@ -1096,10 +1241,10 @@ function showDailyReport(){
       <div style="text-align:center;font-size:22px;font-weight:900;color:var(--accent)">🌙 今日結束！</div>
       <div style="text-align:center;font-size:13px;color:var(--text2);font-weight:700">無限塔 · 電梯日報</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        ${rCard('總送達','🧍',d.delivered,'人')}
+        ${rCard('送達乘客','🧍',d.delivered,'人')}
+        ${rCard('送達貨物','📦',d.cargoDelivered,'件')}
         ${rCard('總得分','⭐',G.score,'分')}
         ${rCard('移動層數','🏢',d.floorsCount,'層')}
-        ${rCard('特殊獎勵','🎁',d.bonusScore,'分')}
       </div>
       <div style="background:var(--bg3);border-radius:14px;padding:12px 14px;border:2px solid var(--border2)">
         <div style="font-size:11px;font-weight:800;color:var(--text3);margin-bottom:8px">📊 今日洞察</div>
@@ -1121,8 +1266,8 @@ function showDailyReport(){
   document.getElementById('report-next-day').addEventListener('click',()=>{
     document.getElementById('report-overlay').classList.remove('open');
     G.gameMins=DAY_START; G.dayEnded=false;
-    G.passengers=[];
-    G.daily={delivered:0,byType:{},byFloor:{},bonusScore:0,hourlyCount:new Array(24).fill(0),floorsCount:0};
+    G.passengers=[]; G.cargo=[];
+    G.daily={delivered:0,cargoDelivered:0,byType:{},byFloor:{},bonusScore:0,hourlyCount:new Array(24).fill(0),floorsCount:0};
     G.floorsCount=0;
     G.elevs.forEach(e=>{e.lastCountedFloor=e.floor;});
     setPaused(false);
@@ -1176,6 +1321,7 @@ function loop(now){
   G.lastTime=now; G.elapsed+=dt;
   updateGameTime(dt);
   spawnPax(now);
+  spawnCargo(now);
   G.elevs.forEach(e=>updateElev(e,dt));
   renderAll();
   requestAnimationFrame(loop);
